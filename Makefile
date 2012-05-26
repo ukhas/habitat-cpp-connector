@@ -2,9 +2,13 @@
 # -*- makefile -*-
 # Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see LICENSE.
 
-CFLAGS = -pthread -O2 -Wall -Werror -pedantic -Wno-variadic-macros -Isrc
-upl_libs = -pthread -ljsoncpp -lcurl -lssl
-ext_libs = -ljsoncpp
+jsoncpp_cflags := $(shell pkg-config --cflags jsoncpp)
+jsoncpp_libs := $(shell pkg-config --libs jsoncpp)
+
+CFLAGS = -pthread -O2 -Wall -Werror -pedantic -Wno-long-long \
+		 -Wno-variadic-macros -Isrc $(jsoncpp_cflags)
+upl_libs = -pthread $(jsoncpp_libs) -lcurl -lssl
+ext_libs = $(jsoncpp_libs)
 
 test_py_files = tests/test_uploader.py tests/test_extractor.py
 headers = src/CouchDB.h src/EZ.h src/Uploader.h src/UploaderThread.h \

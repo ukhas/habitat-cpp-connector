@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include <jsoncpp/json.h>
+#include <json/json.h>
 #include "EZ.h"
 #include "CouchDB.h"
 

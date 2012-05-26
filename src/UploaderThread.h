@@ -6,7 +6,7 @@
 #include "EZ.h"
 #include "Uploader.h"
 #include <memory>
-#include <jsoncpp/json.h>
+#include <json/json.h>
 
 using namespace std;
 

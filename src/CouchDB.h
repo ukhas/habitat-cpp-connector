@@ -3,7 +3,7 @@
 #ifndef HABITAT_COUCHDB_H
 #define HABITAT_COUCHDB_H
 
-#include <jsoncpp/json.h>
+#include <json/json.h>
 #include <string>
 #include <iostream>
 #include <deque>

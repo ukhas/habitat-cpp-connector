@@ -4,7 +4,7 @@
 #define HABITAT_EXTRACTOR_H
 
 #include <vector>
-#include <jsoncpp/json.h>
+#include <json/json.h>
 #include "UploaderThread.h"
 #include "EZ.h"
 
