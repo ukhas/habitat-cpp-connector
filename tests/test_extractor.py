@@ -178,21 +178,21 @@ class TestUKHASExtractor:
 
         self.test_extracts()
 
-    def test_gives_up_after_16skipped(self):
+    def test_gives_up_after_50_skipped(self):
         self.extr.push("$$")
         self.extr.check_status("start delim")
-        self.extr.skipped(10000)
+        self.extr.skipped(51)
         self.extr.check_status("giving up")
         self.extr.check_quiet()
         self.extr.push("\n")
         self.extr.check_quiet()
 
-    def test_gives_up_after_16garbage(self):
+    def test_gives_up_after_32_garbage(self):
         self.extr.push("$$")
         self.extr.check_status("start delim")
 
         self.extr.push("some,legit,data")
-        self.extr.push("\t some printable data" * 17)
+        self.extr.push("\t some printable data" * 33)
         self.extr.check_status("giving up")
         self.extr.check_quiet()
 
@@ -207,9 +207,7 @@ class TestUKHASExtractor:
         self.extr.check_status("start delim")
         self.extr.skipped(5)
         self.extr.push("data\n")
-        # JsonCPP doesn't support \0 in strings, so the mock UploaderThread
-        # replaces it with \1s
-        self.extr.check_upload("$$some\1\1\1\1\1data\n")
+        self.extr.check_upload("$$somedata\n")
         self.extr.check_status("extracted")
         self.extr.check_status("parse failed")
         self.extr.check_data()

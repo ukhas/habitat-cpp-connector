@@ -22,11 +22,19 @@ void UKHASExtractor::reset_buffer()
 
 void UKHASExtractor::skipped(int n)
 {
-    if (n > 20)
-        n = 20;
+    if (extracting)
+    {
+        skipped_count += n;
 
-    for (int i = 0; i < n; i++)
-        push('\0', PUSH_NONE);
+        /* If radio goes silent for too long (~10s at 50baud,
+         * ~1.5s at 300baud) */
+        if (skipped_count > 50)
+        {
+            mgr->status("UKHAS Extractor: giving up (silence)");
+            reset_buffer();
+            extracting = false;
+        }
+    }
 }
 
 void UKHASExtractor::push(char b, enum push_flags flags)
@@ -41,6 +49,7 @@ void UKHASExtractor::push(char b, enum push_flags flags)
         buffer.push_back(b);
 
         garbage_count = 0;
+        skipped_count = 0;
         extracting = true;
 
         mgr->status("UKHAS Extractor: found start delimiter");
@@ -82,7 +91,7 @@ void UKHASExtractor::push(char b, enum push_flags flags)
             garbage_count++;
 
         /* Sane limits to avoid uploading tonnes of garbage */
-        if (buffer.length() > 1000 || garbage_count > 16)
+        if (buffer.length() > 1000 || garbage_count > 32)
         {
             mgr->status("UKHAS Extractor: giving up");
 

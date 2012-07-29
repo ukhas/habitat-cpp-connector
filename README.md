@@ -10,8 +10,15 @@ You will need these dependencies:
  - [libcURL](http://curl.haxx.se/)
 
 Both build from source fairly easily, but the easiest way to acquire them for
-Ubuntu lucid is:
+Ubuntu is:
 
  - [JsonCpp (PPA)](https://launchpad.net/~danieljonathanrichman/+archive/ppa)
- - [libcURL (apt)](http://packages.ubuntu.com/lucid/libcurl4-openssl-dev)
+   for Ubuntu oneiric (11.10) and older
+ - [libjsoncpp-dev (apt)](http://packages.ubuntu.com/precise/libjsoncpp-dev)
+ - [libcurl4-openssl-dev (apt)](http://packages.ubuntu.com/precise/libcurl4-openssl-dev)
+
+Or Debian:
+
+ - libjsoncpp-dev in wheezy and newer (the wheezy package also works fine on squeeze)
+ - libcurl4-openssl-dev
 

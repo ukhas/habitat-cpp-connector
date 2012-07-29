@@ -12,6 +12,7 @@ class UKHASExtractor : public Extractor
     int extracting;
     char last;
     string buffer;
+    int skipped_count;
     int garbage_count;
 
     void reset_buffer();
