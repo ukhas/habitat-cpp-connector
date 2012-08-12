@@ -12,11 +12,8 @@ import collections
 import time
 import uuid
 import copy
-
-try:
-    import elementtree.ElementTree
-except:
-    elementtree = None
+import random
+import xml.etree.cElementTree as ET
 
 class ProxyException:
     def __init__(self, name, what=None):
@@ -151,12 +148,9 @@ class Proxy:
             self._check_valgrind()
 
     def _check_valgrind(self):
-        if elementtree == None:
-            raise AssertionError("Need elementtree in order to check Valgrind")
-
         if self.xmlfile:
             self.xmlfile.seek(0)
-            tree = elementtree.ElementTree.parse(self.xmlfile)
+            tree = ET.parse(self.xmlfile)
             assert tree.find("error") == None
 
     def payload_telemetry(self, data, *args):
@@ -171,10 +165,13 @@ class Proxy:
     def flights(self):
         return self._proxy(["flights"])
 
+    def payloads(self):
+        return self._proxy(["payloads"])
+
     def reset(self):
         return self._proxy(["reset"])
 
-temp_port = 51205
+temp_port = 55205
 
 def next_temp_port():
     global temp_port
@@ -716,10 +713,30 @@ class TestCPPConnector:
             raise AssertionError("Did not raise UnmergeableError")
 
     def test_flights(self):
-        flights= [{"_id": "flight_{0}".format(i), "a flight": i}
-                  for i in xrange(100)]
-        rows = [{"id": doc["_id"], "key": None, "value": None, "doc": doc}
-                for doc in flights]
+        rows = []
+        expect_result = []
+        pcfgs = []
+
+        for i in xrange(100):
+            pcfgs.append({"_id": "pcfg_{0}".format(i),
+                          "type": "payload_configuration", "i": i})
+        for i in xrange(100):
+            payloads = random.sample(pcfgs, random.randint(1, 5))
+            doc = {"_id": "flight_{0}", "type": "flight", "i": i,
+                   "payloads": [p["_id"] for p in payloads]}
+
+            start = self.callbacks.time_project(1000 + i)
+            end = self.callbacks.time_project(2000 + i)
+            rows.append({"id": doc["_id"], "key": [end, start, 0],
+                        "value": None, "doc": doc})
+            for p in payloads:
+                rows.append({"id": doc["_id"], "key": [end, start, 1],
+                            "value": {"_id": p["_id"]}, "doc": p})
+
+            doc = copy.deepcopy(doc)
+            doc["_payload_docs"] = payloads
+            expect_result.append(doc)
+
         fake_view_response = \
                 {"total_rows": len(rows), "offset": 0, "rows": rows}
 
@@ -728,17 +745,39 @@ class TestCPPConnector:
 
         self.callbacks.advance_time(1925)
         view_time = self.callbacks.time_project(1925)
-        options = "include%5Fdocs=true&startkey=" + str(view_time)
+        view_path = "_design/flight/_view/end%5Fstart%5Fincluding%5Fpayloads"
+        options = "include%5Fdocs=true&startkey=%5B{0}%5D".format(view_time)
 
         self.couchdb.expect_request(
-            path=self.db_path + "_design/uploader%5Fv1/_view/flights?" + options,
+            path=self.db_path + view_path + "?" + options,
             code=200,
             respond_json=copy.deepcopy(fake_view_response)
         )
         self.couchdb.run()
 
         result = self.uploader.flights()
-        assert result == flights
+        assert result == expect_result
+
+    def test_payloads(self):
+        payloads = [{"_id": "pcfg_{0}".format(i), "a flight": i}
+                  for i in xrange(100)]
+        rows = [{"id": doc["_id"], "key": None, "value": None, "doc": doc}
+                for doc in payloads]
+        fake_view_response = \
+                {"total_rows": len(rows), "offset": 0, "rows": rows}
+
+        view_path = "_design/payload%5Fconfiguration/_view/name%5Ftime%5Fcreated"
+        options = "include%5Fdocs=true"
+
+        self.couchdb.expect_request(
+            path=self.db_path + view_path + "?" + options,
+            code=200,
+            respond_json=copy.deepcopy(fake_view_response)
+        )
+        self.couchdb.run()
+
+        result = self.uploader.payloads()
+        assert result == payloads
 
 class TestCPPConnectorThreaded(TestCPPConnector):
     command = "tests/cpp_connector_threaded"

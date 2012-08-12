@@ -108,6 +108,19 @@ string UploaderFlights::describe()
     return "Uploader.flights()";
 }
 
+void UploaderPayloads::apply(UploaderThread &uthr)
+{
+    check(uthr.uploader.get());
+    auto_ptr< vector<Json::Value> > payloads;
+    payloads.reset(uthr.uploader->payloads());
+    uthr.got_payloads(*payloads);
+}
+
+string UploaderPayloads::describe()
+{
+    return "Uploader.payloads()";
+}
+
 void UploaderShutdown::apply(UploaderThread &uthr)
 {
     throw this;
@@ -174,6 +187,11 @@ void UploaderThread::listener_info(const Json::Value &data,
 void UploaderThread::flights()
 {
     queue_action(new UploaderFlights());
+}
+
+void UploaderThread::payloads()
+{
+    queue_action(new UploaderPayloads());
 }
 
 void UploaderThread::shutdown()
@@ -258,6 +276,11 @@ void UploaderThread::caught_exception(const invalid_argument &error)
 void UploaderThread::got_flights(const vector<Json::Value> &flights)
 {
     log("Default action: got_flights; discarding.");
+}
+
+void UploaderThread::got_payloads(const vector<Json::Value> &payloads)
+{
+    log("Default action: got_payloads; discarding.");
 }
 
 } /* namespace habitat */

@@ -192,7 +192,11 @@ Json::Value *Database::view(const string &design_doc, const string &view_name,
 string Database::json_query_value(Json::Value &value)
 {
     Json::FastWriter writer;
-    return writer.write(value);
+    string str = writer.write(value);
+    int final = str.length() - 1;
+    if (final >= 0 && str[final] == '\n')
+        str.erase(final);
+    return str;
 }
 
 } /* namespace CouchDB */

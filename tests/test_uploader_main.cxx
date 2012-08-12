@@ -28,7 +28,7 @@ public:
 };
 
 static Json::Value proxy_callback(const string &name, const Json::Value &args);
-static Json::Value repackage_flights(const vector<Json::Value> &flights);
+static Json::Value vector_to_json(const vector<Json::Value> &vect);
 static void report_result(const Json::Value &arg1,
                           const Json::Value &arg2=Json::Value::null,
                           const Json::Value &arg3=Json::Value::null);
@@ -57,7 +57,10 @@ class TestUploaderThread : public habitat::UploaderThread
         { report_result("error", "invalid_argument", error.what()); }
 
     void got_flights(const vector<Json::Value> &flights)
-        { report_result("return", repackage_flights(flights)); }
+        { report_result("return", vector_to_json(flights)); }
+
+    void got_payloads(const vector<Json::Value> &payloads)
+        { report_result("return", vector_to_json(payloads)); }
 };
 
 typedef TestUploaderThread TestSubject;
@@ -71,6 +74,7 @@ static r_string proxy_listener_info(TestSubject *u, Json::Value command);
 static r_string proxy_listener_telemetry(TestSubject *u, Json::Value command);
 static r_string proxy_payload_telemetry(TestSubject *u, Json::Value command);
 static r_json proxy_flights(TestSubject *u);
+static r_json proxy_payloads(TestSubject *u);
 
 static EZ::cURLGlobal cgl;
 static EZ::Mutex cout_lock;
@@ -135,6 +139,8 @@ int main(int argc, char **argv)
                 return_value = proxy_payload_telemetry(u.get(), command);
             else if (command_name == "flights")
                 return_value = proxy_flights(u.get());
+            else if (command_name == "payloads")
+                return_value = proxy_payloads(u.get());
             else
                 throw runtime_error("invalid command name");
 
@@ -173,6 +179,8 @@ int main(int argc, char **argv)
             proxy_payload_telemetry(&thread, command);
         else if (command_name == "flights")
             proxy_flights(&thread);
+        else if (command_name == "payloads")
+            proxy_payloads(&thread);
         else if (command_name == "return")
             callback_responses.put(command);
 #endif
@@ -330,17 +338,28 @@ static r_json proxy_flights(TestSubject *u)
 #ifndef THREADED
     vector<Json::Value> *result = u->flights();
     auto_ptr< vector<Json::Value> > destroyer(result);
-    return repackage_flights(*result);
+    return vector_to_json(*result);
 #else
     u->flights();
 #endif
 }
 
-static Json::Value repackage_flights(const vector<Json::Value> &flights)
+static r_json proxy_payloads(TestSubject *u)
+{
+#ifndef THREADED
+    vector<Json::Value> *result = u->payloads();
+    auto_ptr< vector<Json::Value> > destroyer(result);
+    return vector_to_json(*result);
+#else
+    u->payloads();
+#endif
+}
+
+static Json::Value vector_to_json(const vector<Json::Value> &vect)
 {
     Json::Value list(Json::arrayValue);
     vector<Json::Value>::const_iterator it;
-    for (it = flights.begin(); it != flights.end(); it++)
+    for (it = vect.begin(); it != vect.end(); it++)
         list.append(*it);
     return list;
 }

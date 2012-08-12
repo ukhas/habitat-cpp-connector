@@ -246,13 +246,59 @@ string Uploader::listener_info(const Json::Value &data, int time_created)
 vector<Json::Value> *Uploader::flights()
 {
     map<string,string> options;
-    ostringstream timefmt;
-    timefmt << time(NULL);
+
+    Json::Value startkey(Json::arrayValue);
+    startkey.append((unsigned int) time(NULL));
 
     options["include_docs"] = "true";
-    options["startkey"] = timefmt.str();
+    options["startkey"] = CouchDB::Database::json_query_value(startkey);
 
-    Json::Value *response = database.view("uploader_v1", "flights", options);
+    Json::Value *response =
+        database.view("flight", "end_start_including_payloads", options);
+    auto_ptr<Json::Value> response_destroyer(response);
+
+    vector<Json::Value> *result = new vector<Json::Value>;
+    auto_ptr< vector<Json::Value> > result_destroyer(result);
+
+    const Json::Value &rows = (*response)["rows"];
+    Json::Value::const_iterator it;
+
+    result->reserve(rows.size());
+    Json::Value *current_pcfg_list = NULL;
+
+    for (it = rows.begin(); it != rows.end(); it++)
+    {
+        const Json::Value &row = *it;
+        const Json::Value &key = row["key"], &doc = row["doc"];
+        bool is_pcfg = (key[2u].asInt() == 1);
+
+        if (!is_pcfg)
+        {
+            result->push_back(doc);
+            /* copies the doc */
+
+            Json::Value &doc_copy = result->back();
+            doc_copy["_payload_docs"] = Json::Value(Json::arrayValue);
+            current_pcfg_list = &(doc_copy["_payload_docs"]);
+        }
+        else
+        {
+            current_pcfg_list->append(doc);
+        }
+    }
+
+    result_destroyer.release();
+
+    return result;
+}
+
+vector<Json::Value> *Uploader::payloads()
+{
+    map<string,string> options;
+    options["include_docs"] = "true";
+
+    Json::Value *response =
+        database.view("payload_configuration", "name_time_created", options);
     auto_ptr<Json::Value> response_destroyer(response);
 
     vector<Json::Value> *result = new vector<Json::Value>;
@@ -269,7 +315,6 @@ vector<Json::Value> *Uploader::flights()
     }
 
     result_destroyer.release();
-
     return result;
 }
 

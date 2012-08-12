@@ -125,6 +125,15 @@ public:
     string describe();
 };
 
+class UploaderPayloads : public UploaderAction
+{
+    void apply(UploaderThread &uthr);
+    friend class UploaderThread;
+
+public:
+    string describe();
+};
+
 class UploaderShutdown : public UploaderAction
 {
     void apply(UploaderThread &uthr);
@@ -150,6 +159,7 @@ class UploaderThread : public EZ::SimpleThread
     friend class UploaderListenerTelemetry;
     friend class UploaderListenerInfo;
     friend class UploaderFlights;
+    friend class UploaderPayloads;
 
 public:
     UploaderThread();
@@ -166,6 +176,7 @@ public:
     void listener_telemetry(const Json::Value &data, int time_created=-1);
     void listener_info(const Json::Value &data, int time_created=-1);
     void flights();
+    void payloads();
     void shutdown();
 
     void *run();
@@ -179,6 +190,7 @@ public:
     virtual void caught_exception(const runtime_error &error);
     virtual void caught_exception(const invalid_argument &error);
     virtual void got_flights(const vector<Json::Value> &flights);
+    virtual void got_payloads(const vector<Json::Value> &payloads);
 };
 
 } /* namespace habitat */

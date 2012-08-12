@@ -54,6 +54,7 @@ public:
     string listener_telemetry(const Json::Value &data, int time_created=-1);
     string listener_info(const Json::Value &data, int time_created=-1);
     vector<Json::Value> *flights();
+    vector<Json::Value> *payloads();
 };
 
 } /* namespace habitat */
