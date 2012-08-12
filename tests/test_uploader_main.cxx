@@ -1,4 +1,4 @@
-/* Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
+/* Copyright 2011-2012 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
 
 #include <iostream>
 #include <memory>
@@ -85,15 +85,10 @@ static SafeValue<int> last_time(10000);
 static EZ::Queue<Json::Value> callback_responses;
 #endif
 
+#ifndef THREADED
 int main(int argc, char **argv)
 {
-#ifndef THREADED
     auto_ptr<habitat::Uploader> u;
-#else
-    enable_callbacks.set(true);
-    TestSubject thread;
-    thread.start();
-#endif
 
     for (;;)
     {
@@ -102,9 +97,6 @@ int main(int argc, char **argv)
 
         if (line[0] == '\0')
         {
-#ifdef THREADED
-            enable_callbacks.set(false);
-#endif
             break;
         }
 
@@ -119,7 +111,6 @@ int main(int argc, char **argv)
 
         string command_name = command[0u].asString();
 
-#ifndef THREADED
         if (!u.get() && command_name != "init")
             throw runtime_error("You must initialise it first");
 
@@ -166,7 +157,39 @@ int main(int argc, char **argv)
         }
 
         enable_callbacks.set(false);
-#else
+    }
+
+    return 0;
+}
+#else /* defined THREADED */
+int main(int argc, char **argv)
+{
+    enable_callbacks.set(true);
+    TestSubject thread;
+    thread.start();
+
+    for (;;)
+    {
+        char line[1024];
+        cin.getline(line, 1024);
+
+        if (line[0] == '\0')
+        {
+            enable_callbacks.set(false);
+            break;
+        }
+
+        Json::Reader reader;
+        Json::Value command;
+
+        if (!reader.parse(line, command, false))
+            throw runtime_error("JSON parsing failed");
+
+        if (!command.isArray() || !command[0u].isString())
+            throw runtime_error("Invalid JSON input");
+
+        string command_name = command[0u].asString();
+
         if (command_name == "init")
             proxy_constructor(&thread, command);
         else if (command_name == "reset")
@@ -183,16 +206,14 @@ int main(int argc, char **argv)
             proxy_payloads(&thread);
         else if (command_name == "return")
             callback_responses.put(command);
-#endif
     }
 
-#ifdef THREADED
     thread.shutdown();
     thread.join();
-#endif
 
     return 0;
 }
+#endif
 
 time_t time(time_t *t) throw()
 {
@@ -220,11 +241,11 @@ time_t time(time_t *t) throw()
     return value;
 }
 
+#ifndef THREADED
 static Json::Value proxy_callback(const string &name, const Json::Value &args)
 {
     report_result("callback", name, args);
 
-#ifndef THREADED
     char line[1024];
     cin.getline(line, 1024);
 
@@ -239,12 +260,17 @@ static Json::Value proxy_callback(const string &name, const Json::Value &args)
 
     if (response[0u].asString() != "return")
         throw runtime_error("Callback failed");
-#else
-    Json::Value response = callback_responses.get();
-#endif
 
     return response[1u];
 }
+#else /* defined THREADED */
+static Json::Value proxy_callback(const string &name, const Json::Value &args)
+{
+    report_result("callback", name, args);
+    Json::Value response = callback_responses.get();
+    return response[1u];
+}
+#endif
 
 #ifndef THREADED
 static habitat::Uploader *proxy_constructor(Json::Value command)
@@ -333,27 +359,31 @@ static r_string proxy_payload_telemetry(TestSubject *u, Json::Value command)
         return u->payload_telemetry(data.asString(), metadata, tc.asInt());
 }
 
+#ifndef THREADED
 static r_json proxy_flights(TestSubject *u)
 {
-#ifndef THREADED
     vector<Json::Value> *result = u->flights();
     auto_ptr< vector<Json::Value> > destroyer(result);
     return vector_to_json(*result);
-#else
-    u->flights();
-#endif
 }
 
 static r_json proxy_payloads(TestSubject *u)
 {
-#ifndef THREADED
     vector<Json::Value> *result = u->payloads();
     auto_ptr< vector<Json::Value> > destroyer(result);
     return vector_to_json(*result);
-#else
-    u->payloads();
-#endif
 }
+#else /* defined THREADED */
+static r_json proxy_flights(TestSubject *u)
+{
+    u->flights();
+}
+
+static r_json proxy_payloads(TestSubject *u)
+{
+    u->payloads();
+}
+#endif
 
 static Json::Value vector_to_json(const vector<Json::Value> &vect)
 {

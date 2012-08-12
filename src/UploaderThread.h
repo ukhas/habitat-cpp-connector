@@ -1,4 +1,4 @@
-/* Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
+/* Copyright 2011-2012 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
 
 #ifndef HABITAT_UPLOADERTHREAD_H
 #define HABITAT_UPLOADERTHREAD_H
