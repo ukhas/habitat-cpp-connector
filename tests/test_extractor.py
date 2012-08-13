@@ -232,7 +232,7 @@ class TestUKHASExtractor:
                             "mypayload")
 
     crude_parse_flight_doc = {
-        "sentence": {
+        "sentences": [ {
             "payload": "TESTING",
             "checksum": "crc16-ccitt",
             "fields": [
@@ -240,7 +240,7 @@ class TestUKHASExtractor:
                 {"name": "field_b"},
                 {"name": "field_c"}
             ],
-        }
+        } ]
     }
 
     def test_crude_parse_config(self):
@@ -257,26 +257,30 @@ class TestUKHASExtractor:
 
     def test_crude_checks(self):
         checks = [
-            ("$$TESTING,a,b,c*asdfg\n", "invalid checksum len"),
-            ("$$TESTING,a,b,c*45\n", "invalid checksum: expected 1A"),
-            ("$$TESTING,a,b,c*AAAA\n", "invalid checksum: expected BEBC"),
-            ("$$TESTING,val_a,val_b*4EB7\n", "incorrect number of fields"),
-            ("$$TESTING,a,b,c*1A\n", "wrong checksum type"),
-            ("$$ANOTHER,a,b,c*2355\n", "incorrect callsign"),
+            ("$$TESTING,a,b,c*asdfg\n", "invalid checksum len", False),
+            ("$$TESTING,a,b,c*45\n", "invalid checksum: expected 1A", False),
+            ("$$TESTING,a,b,c*AAAA\n", "invalid checksum: expected BEBC",
+                False),
+            ("$$TESTING,val_a,val_b*4EB7\n", "incorrect number of fields",
+                True),
+            ("$$TESTING,a,b,c*1A\n", "wrong checksum type", True),
+            ("$$ANOTHER,a,b,c*2355\n", "incorrect callsign", True),
         ]
 
         self.extr.set_current_payload(self.crude_parse_flight_doc)
 
-        for (string, error) in checks:
+        for (string, error, full_parse_line) in checks:
             self.extr.push(string)
             self.extr.check_status("start delim")
             self.extr.check_upload(string)
             self.extr.check_status("extracted")
+            if full_parse_line:
+                self.extr.check_status("full parse failed:")
             self.extr.check_status(error)
             self.extr.check_data()
 
     multi_config_flight_doc = {
-        "sentence": [
+        "sentences": [
             { "payload": "AWKWARD",
               "checksum": "crc16-ccitt",
               "fields": [ {"name": "fa"}, {"name": "fo"}, {"name": "fc"} ] },
@@ -307,7 +311,7 @@ class TestUKHASExtractor:
                               "fa": "extended", "fo": "other", "fc": "data"})
 
     ddmmmmmm_flight_doc = {
-        "sentence": {
+        "sentences": [ {
             "payload": "TESTING",
             "checksum": "crc16-ccitt",
             "fields": [
@@ -317,7 +321,7 @@ class TestUKHASExtractor:
                  "format":"ddmm.mm"},
                 {"name": "field_b"}
             ],
-        }
+        } ]
     }
 
     def test_ddmmmmmm(self):

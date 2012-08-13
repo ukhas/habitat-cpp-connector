@@ -285,6 +285,9 @@ static void extract_fields(Json::Value &data, const Json::Value &fields,
 
     while (field != fields.end() && part != parts.end())
     {
+        if (!(*field).isObject())
+            throw runtime_error("Invalid configuration (field not an object)");
+
         const string key = (*field)["name"].asString();
         const string value = (*part);
 
@@ -317,6 +320,9 @@ static void attempt_settings(Json::Value &data, const Json::Value &sentence,
                              const string &checksum_name,
                              const vector<string> &parts)
 {
+    if (!sentence.isObject())
+        throw runtime_error("Invalid configuration (sentence not an object)");
+
     const Json::Value &fields = sentence["fields"];
 
     const string callsign = sentence["payload"].asString();
@@ -343,6 +349,11 @@ Json::Value UKHASExtractor::crude_parse()
 
     const Json::Value &settings = *settings_ptr;
 
+    if (!settings.isObject())
+        /* note: Json::Value::null.isObject() == true */
+        throw runtime_error("Invalid configuration: "
+                "settings is not an object");
+
     string data, checksum;
     split_string(buffer, &data, &checksum);
 
@@ -355,17 +366,19 @@ Json::Value UKHASExtractor::crude_parse()
 
     Json::Value basic(Json::objectValue);
     cook_basic(basic, buffer, parts[0]);
-    const Json::Value &sentence = settings["sentence"];
+    const Json::Value &sentences = settings["sentences"];
 
-    /* If array: multiple sentence settings to try with.
-     * No settings? No problem; we can still test the checksum */
-    if (!sentence.isNull() && sentence.isArray())
+    if (!sentences.isNull())
     {
+        if (!sentences.isArray())
+            throw runtime_error("Invalid configuration: "
+                    "sentences is not an array");
+
         /* Silence errors, and only log them if all attempts fail */
         vector<string> errors;
 
-        for (Json::Value::iterator it = sentence.begin();
-             it != sentence.end(); it++)
+        for (Json::Value::iterator it = sentences.begin();
+             it != sentences.end(); it++)
         {
             try
             {
@@ -385,20 +398,6 @@ Json::Value UKHASExtractor::crude_parse()
              it != errors.end(); it++)
         {
             mgr->status("UKHAS Extractor: " + (*it));
-        }
-    }
-    else if (!sentence.isNull() && sentence.isObject())
-    {
-        try
-        {
-            Json::Value data(basic);
-            attempt_settings(data, sentence, checksum_name, parts);
-            return data;
-        }
-        catch (runtime_error e)
-        {
-            mgr->status("UKHAS Extractor: full parse failed: " +
-                        string(e.what()));
         }
     }
 

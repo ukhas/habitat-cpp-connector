@@ -113,13 +113,14 @@ static void payload_telemetry_merge(Json::Value &doc,
                                     const string &callsign,
                                     Json::Value &receiver_info)
 {
+    if (!doc.isObject() || !doc["data"].isObject() ||
+            !doc["receivers"].isObject())
+        throw runtime_error("Server gave us an invalid payload telemetry doc");
+
     string other_b64 = doc["data"]["_raw"].asString();
 
     if (!other_b64.length() || other_b64 != data_b64)
         throw CollisionError();
-
-    if (!doc["receivers"].isObject())
-        throw runtime_error("Server gave us an invalid payload telemetry doc");
 
     doc["receivers"][callsign] = receiver_info;
 }
@@ -260,8 +261,14 @@ vector<Json::Value> *Uploader::flights()
     vector<Json::Value> *result = new vector<Json::Value>;
     auto_ptr< vector<Json::Value> > result_destroyer(result);
 
+    if (!response->isObject())
+        throw runtime_error("Invalid response: was not an object");
+
     const Json::Value &rows = (*response)["rows"];
     Json::Value::const_iterator it;
+
+    if (!rows.isArray())
+        throw runtime_error("Invalid response: rows was not an array");
 
     result->reserve(rows.size());
     Json::Value *current_pcfg_list = NULL;
@@ -269,8 +276,16 @@ vector<Json::Value> *Uploader::flights()
     for (it = rows.begin(); it != rows.end(); it++)
     {
         const Json::Value &row = *it;
+        if (!row.isObject())
+            throw runtime_error("Invalid response: row was not an object");
+
         const Json::Value &key = row["key"], &doc = row["doc"];
-        bool is_pcfg = (key[2u].asInt() == 1);
+
+        if (!doc.isObject() || !key.isArray() || key.size() != 3 ||
+                !key[2u].isIntegral())
+            throw runtime_error("Invalid response: bad key or doc in row");
+
+        bool is_pcfg = key[2u].asBool();
 
         if (!is_pcfg)
         {
@@ -304,13 +319,21 @@ vector<Json::Value> *Uploader::payloads()
     vector<Json::Value> *result = new vector<Json::Value>;
     auto_ptr< vector<Json::Value> > result_destroyer(result);
 
+    if (!response->isObject())
+        throw runtime_error("Invalid response: was not an object");
+
     const Json::Value &rows = (*response)["rows"];
     Json::Value::const_iterator it;
+
+    if (!rows.isArray())
+        throw runtime_error("Invalid response: rows was not an array");
 
     result->reserve(rows.size());
 
     for (it = rows.begin(); it != rows.end(); it++)
     {
+        if (!(*it).isObject())
+            throw runtime_error("Invalid response: doc was not an object");
         result->push_back((*it)["doc"]);
     }
 
