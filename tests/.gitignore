@@ -1,2 +1,7 @@
 test_extractor.pyc
 test_uploader.pyc
+test_rfc3339.pyc
+extractor
+cpp_connector
+cpp_connector_threaded
+rfc3339

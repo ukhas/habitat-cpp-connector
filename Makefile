@@ -6,15 +6,19 @@ jsoncpp_cflags := $(shell pkg-config --cflags jsoncpp)
 jsoncpp_libs := $(shell pkg-config --libs jsoncpp)
 
 CFLAGS = -pthread -O2 -Wall -Werror -pedantic -Wno-long-long \
-		 -Wno-variadic-macros -Isrc $(jsoncpp_cflags)
+         -Wno-variadic-macros -Isrc $(jsoncpp_cflags)
 upl_libs = -pthread $(jsoncpp_libs) -lcurl -lssl
 ext_libs = $(jsoncpp_libs)
+rfc_libs = $(jsoncpp_libs)
 
 test_py_files = tests/test_uploader.py tests/test_extractor.py
-headers = src/CouchDB.h src/EZ.h src/Uploader.h src/UploaderThread.h \
+headers = src/CouchDB.h src/EZ.h src/RFC3339.h \
+          src/Uploader.h src/UploaderThread.h \
           src/Extractor.h src/UKHASExtractor.h \
-		  tests/test_extractor_mocks.h
-upl_cxxfiles = src/CouchDB.cxx src/EZ.cxx src/Uploader.cxx
+          tests/test_extractor_mocks.h
+rfc_cxxfiles = src/RFC3339.cxx tests/test_rfc3339_main.cxx
+rfc_binary = tests/rfc3339
+upl_cxxfiles = src/CouchDB.cxx src/EZ.cxx src/RFC3339.cxx src/Uploader.cxx
 upl_thr_cflags = -DTHREADED
 upl_nrm_binary = tests/cpp_connector
 upl_nrm_objects = tests/test_uploader_main.o
@@ -28,6 +32,7 @@ ext_mock_cflags = -include tests/test_extractor_mocks.h
 CXXFLAGS = $(CFLAGS)
 upl_objects = $(patsubst %.cxx,%.o,$(upl_cxxfiles))
 ext_objects = $(patsubst %.cxx,%.ext_mock.o,$(ext_cxxfiles))
+rfc_objects = $(patsubst %.cxx,%.o,$(rfc_cxxfiles))
 
 %.o : %.cxx $(headers)
 	g++ -c $(CXXFLAGS) -o $@ $<
@@ -47,7 +52,11 @@ $(upl_thr_binary) : $(upl_objects) $(upl_thr_objects)
 $(ext_binary) : $(ext_objects)
 	g++ $(CXXFLAGS) -o $@ $(ext_objects) $(ext_libs)
 
-test : $(upl_nrm_binary) $(upl_thr_binary) $(ext_binary) $(test_py_files)
+$(rfc_binary) : $(rfc_objects)
+	g++ $(CXXFLAGS) -o $@ $(rfc_objects) $(rfc_libs)
+
+test : $(upl_nrm_binary) $(upl_thr_binary) $(ext_binary) $(rfc_binary) \
+       $(test_py_files)
 	nosetests
 
 clean :
