@@ -175,7 +175,7 @@ string Uploader::payload_telemetry(const string &data,
         database.save_doc(doc);
         return doc_id;
     }
-    catch (CouchDB::Conflict e)
+    catch (CouchDB::Conflict &e)
     {
         for (int attempts = 0; attempts < max_merge_attempts; attempts++)
         {
@@ -191,7 +191,7 @@ string Uploader::payload_telemetry(const string &data,
 
                 return doc_id;
             }
-            catch (CouchDB::Conflict e)
+            catch (CouchDB::Conflict &e)
             {
                 continue;
             }

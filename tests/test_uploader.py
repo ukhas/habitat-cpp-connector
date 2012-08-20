@@ -14,6 +14,7 @@ import uuid
 import copy
 import random
 import xml.etree.cElementTree as ET
+import urllib
 
 class ProxyException:
     def __init__(self, name, what=None):
@@ -252,7 +253,7 @@ class MockHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         e = self.server.expect_queue.popleft()
 
         self.compare(e["method"], self.command, "method")
-        self.compare(e["path"], self.path, "path")
+        self.compare(e["path"], urllib.unquote(self.path), "path")
 
         expect_100_header = self.headers.getheader('expect')
         expect_100 = expect_100_header and \
@@ -740,13 +741,10 @@ class TestCPPConnector:
         fake_view_response = \
                 {"total_rows": len(rows), "offset": 0, "rows": rows}
 
-        # cURL is a little overzealous with its escape(): _ is replaced
-        # with %5F. This should be fine
-
         self.callbacks.advance_time(1925)
         view_time = self.callbacks.time_project(1925)
-        view_path = "_design/flight/_view/end%5Fstart%5Fincluding%5Fpayloads"
-        options = "include%5Fdocs=true&startkey=%5B{0}%5D".format(view_time)
+        view_path = "_design/flight/_view/end_start_including_payloads"
+        options = "include_docs=true&startkey=[{0}]".format(view_time)
 
         self.couchdb.expect_request(
             path=self.db_path + view_path + "?" + options,
@@ -766,8 +764,8 @@ class TestCPPConnector:
         fake_view_response = \
                 {"total_rows": len(rows), "offset": 0, "rows": rows}
 
-        view_path = "_design/payload%5Fconfiguration/_view/name%5Ftime%5Fcreated"
-        options = "include%5Fdocs=true"
+        view_path = "_design/payload_configuration/_view/name_time_created"
+        options = "include_docs=true"
 
         self.couchdb.expect_request(
             path=self.db_path + view_path + "?" + options,

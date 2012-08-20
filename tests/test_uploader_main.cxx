@@ -140,14 +140,14 @@ int main(int argc, char **argv)
             else
                 report_result("return");
         }
-        catch (runtime_error e)
+        catch (runtime_error &e)
         {
             if (e.what() == string("invalid command name"))
                 throw;
 
             report_result("error", "runtime_error", e.what());
         }
-        catch (invalid_argument e)
+        catch (invalid_argument &e)
         {
             report_result("error", "invalid_argument", e.what());
         }

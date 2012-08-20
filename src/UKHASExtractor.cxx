@@ -66,7 +66,7 @@ void UKHASExtractor::push(char b, enum push_flags flags)
         {
             mgr->data(crude_parse());
         }
-        catch (runtime_error e)
+        catch (runtime_error &e)
         {
             mgr->status("UKHAS Extractor: crude parse failed: " +
                         string(e.what()));
@@ -386,7 +386,7 @@ Json::Value UKHASExtractor::crude_parse()
                 attempt_settings(data, (*it), checksum_name, parts);
                 return data;
             }
-            catch (runtime_error e)
+            catch (runtime_error &e)
             {
                 errors.push_back(e.what());
             }

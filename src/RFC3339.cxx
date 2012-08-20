@@ -21,7 +21,7 @@ bool validate_rfc3339(const string &rfc3339)
     {
         rfc3339_to_timestamp(rfc3339);
     }
-    catch (InvalidFormat e)
+    catch (InvalidFormat &e)
     {
         return false;
     }

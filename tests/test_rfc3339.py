@@ -33,7 +33,13 @@ class ProxyFunction(object):
         args = [self.name] + list(args)
         self.p.stdin.write(json.dumps(args))
         self.p.stdin.write("\n")
-        return json.loads(self.p.stdout.readline())
+        response, thing = json.loads(self.p.stdout.readline())
+        if response == "return":
+            return thing
+        elif response == "time_t error":
+            raise ValueError("timestamp out of range for platform time_t")
+        else:
+            raise Exception(thing)
 
 
 class ProxyFunctionModule(object):
@@ -210,13 +216,20 @@ class TestTimestampToRFC3339UTCOffset(object):
 
 class TestTimestampToRFC3339LocalOffsetLondon(object):
     def setup(self):
-        environ = os.environ.copy()
-        environ["TZ"] = "Europe/London"
+        self.old = os.environ.get("TZ", None)
+        os.environ["TZ"] = "Europe/London"
+        time.tzset()
 
-        self.mod = ProxyFunctionModule("tests/rfc3339", environ=environ)
+        self.mod = ProxyFunctionModule("tests/rfc3339", environ=os.environ)
         self.func = self.mod.timestamp_to_rfc3339_localoffset
 
     def teardown(self):
+        if self.old is None:
+            del os.environ["TZ"]
+        else:
+            os.environ["TZ"] = self.old
+        time.tzset()
+
         self.mod.close()
 
     def test_simple_cases(self):
@@ -244,13 +257,20 @@ class TestTimestampToRFC3339LocalOffsetLondon(object):
 
 class TestTimestampToRFC3339LocalOffsetNewYork(object):
     def setup(self):
-        environ = os.environ.copy()
-        environ["TZ"] = "America/New_York"
+        self.old = os.environ.get("TZ", None)
+        os.environ["TZ"] = "America/New_York"
+        time.tzset()
 
-        self.mod = ProxyFunctionModule("tests/rfc3339", environ=environ)
+        self.mod = ProxyFunctionModule("tests/rfc3339", environ=os.environ)
         self.func = self.mod.timestamp_to_rfc3339_localoffset
 
     def teardown(self):
+        if self.old is None:
+            del os.environ["TZ"]
+        else:
+            os.environ["TZ"] = self.old
+        time.tzset()
+
         self.mod.close()
 
     def test_simple_cases(self):

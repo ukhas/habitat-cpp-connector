@@ -134,7 +134,7 @@ void Database::save_doc(Json::Value &doc)
     {
         response = server.curl.put(doc_url, json_doc);
     }
-    catch (EZ::HTTPResponse e)
+    catch (EZ::HTTPResponse &e)
     {
         /* Catch HTTP 409 Resource Conflict */
 

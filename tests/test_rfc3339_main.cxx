@@ -36,10 +36,13 @@ int main(int argc, char **argv)
     }
 }
 
-void reply(const Json::Value &what)
+void reply(const Json::Value &arg1, const Json::Value &arg2)
 {
+    Json::Value response(Json::arrayValue);
+    response.append(arg1);
+    response.append(arg2);
     Json::FastWriter writer;
-    cout << writer.write(what);
+    cout << writer.write(response);
 }
 
 void handle_command(const Json::Value &command)
@@ -58,18 +61,29 @@ void handle_command(const Json::Value &command)
         int_arg = command[1u].asLargestInt();
     }
 
-    if (command_name == "validate_rfc3339")
-        reply(RFC3339::validate_rfc3339(string_arg));
-    else if (command_name == "rfc3339_to_timestamp")
-        reply(RFC3339::rfc3339_to_timestamp(string_arg));
-    else if (command_name == "timestamp_to_rfc3339_utcoffset")
-        reply(RFC3339::timestamp_to_rfc3339_utcoffset(int_arg));
-    else if (command_name == "timestamp_to_rfc3339_localoffset")
-        reply(RFC3339::timestamp_to_rfc3339_localoffset(int_arg));
-    else if (command_name == "now_to_rfc3339_utcoffset")
-        reply(RFC3339::now_to_rfc3339_utcoffset());
-    else if (command_name == "now_to_rfc3339_localoffset")
-        reply(RFC3339::now_to_rfc3339_localoffset());
-    else
-        throw runtime_error("Command not found");
+    try
+    {
+        if (command_name == "validate_rfc3339")
+            reply("return", RFC3339::validate_rfc3339(string_arg));
+        else if (command_name == "rfc3339_to_timestamp")
+            reply("return", RFC3339::rfc3339_to_timestamp(string_arg));
+        else if (command_name == "timestamp_to_rfc3339_utcoffset")
+            reply("return", RFC3339::timestamp_to_rfc3339_utcoffset(int_arg));
+        else if (command_name == "timestamp_to_rfc3339_localoffset")
+            reply("return", RFC3339::timestamp_to_rfc3339_localoffset(int_arg));
+        else if (command_name == "now_to_rfc3339_utcoffset")
+            reply("return", RFC3339::now_to_rfc3339_utcoffset());
+        else if (command_name == "now_to_rfc3339_localoffset")
+            reply("return", RFC3339::now_to_rfc3339_localoffset());
+        else
+            throw runtime_error("Command not found");
+    }
+    catch (out_of_range &e)
+    {
+        reply("time_t error", false);
+    }
+    catch (exception &e)
+    {
+        reply("exception", e.what());
+    }
 }

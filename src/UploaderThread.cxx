@@ -224,12 +224,12 @@ void *UploaderThread::run()
         {
             break;
         }
-        catch (runtime_error e)
+        catch (runtime_error &e)
         {
             caught_exception(e);
             continue;
         }
-        catch (invalid_argument e)
+        catch (invalid_argument &e)
         {
             caught_exception(e);
             continue;

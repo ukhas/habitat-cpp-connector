@@ -4,10 +4,15 @@
 
 jsoncpp_cflags := $(shell pkg-config --cflags jsoncpp)
 jsoncpp_libs := $(shell pkg-config --libs jsoncpp)
+curl_cflags := $(shell pkg-config --cflags libcurl)
+curl_libs := $(shell pkg-config --libs libcurl)
+ssl_cflags := $(shell pkg-config --cflags openssl)
+ssl_libs := $(shell pkg-config --libs openssl)
 
 CFLAGS = -pthread -O2 -Wall -Werror -pedantic -Wno-long-long \
-         -Wno-variadic-macros -Isrc $(jsoncpp_cflags)
-upl_libs = -pthread $(jsoncpp_libs) -lcurl -lssl
+         -Wno-variadic-macros -Isrc \
+		 $(jsoncpp_cflags) $(curl_cflags) $(ssl_cflags)
+upl_libs = -pthread $(jsoncpp_libs) $(curl_libs) $(ssl_libs)
 ext_libs = $(jsoncpp_libs)
 rfc_libs = $(jsoncpp_libs)
 
