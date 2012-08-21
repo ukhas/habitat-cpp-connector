@@ -79,7 +79,7 @@ static r_json proxy_payloads(TestSubject *u);
 static EZ::cURLGlobal cgl;
 static EZ::Mutex cout_lock;
 static SafeValue<bool> enable_callbacks(false);
-static SafeValue<int> last_time(10000);
+static SafeValue<int> last_time(1300000000);
 
 #ifdef THREADED
 static EZ::Queue<Json::Value> callback_responses;

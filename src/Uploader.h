@@ -40,7 +40,7 @@ class Uploader
     string latest_listener_telemetry;
 
     string listener_doc(const char *type, const Json::Value &data,
-                        int time_created);
+                        long long int time_created);
 
 public:
     Uploader(const string &callsign,
@@ -50,9 +50,11 @@ public:
     ~Uploader() {};
     string payload_telemetry(const string &data,
                              const Json::Value &metadata=Json::Value::null,
-                             int time_created=-1);
-    string listener_telemetry(const Json::Value &data, int time_created=-1);
-    string listener_info(const Json::Value &data, int time_created=-1);
+                             long long int time_created=-1);
+    string listener_telemetry(const Json::Value &data,
+                              long long int time_created=-1);
+    string listener_info(const Json::Value &data,
+                         long long int time_created=-1);
     vector<Json::Value> *flights();
     vector<Json::Value> *payloads();
 };

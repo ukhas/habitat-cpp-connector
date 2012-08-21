@@ -11,6 +11,7 @@
 #include <openssl/evp.h>
 #include "CouchDB.h"
 #include "EZ.h"
+#include "RFC3339.h"
 
 using namespace std;
 
@@ -89,10 +90,11 @@ static string base64(const string &data)
     return data_b64;
 }
 
-static void set_time(Json::Value &thing, int time_created)
+static void set_time(Json::Value &thing, long long int time_created)
 {
-    thing["time_uploaded"] = Json::Int(time(NULL));
-    thing["time_created"] = time_created;
+    thing["time_uploaded"] = RFC3339::now_to_rfc3339_localoffset();
+    thing["time_created"] =
+        RFC3339::timestamp_to_rfc3339_localoffset(time_created);
 }
 
 static void payload_telemetry_new(Json::Value &doc,
@@ -127,7 +129,7 @@ static void payload_telemetry_merge(Json::Value &doc,
 
 string Uploader::payload_telemetry(const string &data,
                                    const Json::Value &metadata,
-                                   int time_created)
+                                   long long int time_created)
 {
     EZ::MutexLock lock(mutex);
 
@@ -202,7 +204,7 @@ string Uploader::payload_telemetry(const string &data,
 }
 
 string Uploader::listener_doc(const char *type, const Json::Value &data,
-                              int time_created)
+                              long long int time_created)
 {
     if (time_created == -1)
         time_created = time(NULL);
@@ -226,7 +228,8 @@ string Uploader::listener_doc(const char *type, const Json::Value &data,
     return doc["_id"].asString();
 }
 
-string Uploader::listener_telemetry(const Json::Value &data, int time_created)
+string Uploader::listener_telemetry(const Json::Value &data,
+                                    long long int time_created)
 {
     EZ::MutexLock lock(mutex);
 
@@ -235,7 +238,8 @@ string Uploader::listener_telemetry(const Json::Value &data, int time_created)
     return latest_listener_telemetry;
 }
 
-string Uploader::listener_info(const Json::Value &data, int time_created)
+string Uploader::listener_info(const Json::Value &data,
+                               long long int time_created)
 {
     EZ::MutexLock lock(mutex);
 
@@ -249,7 +253,7 @@ vector<Json::Value> *Uploader::flights()
     map<string,string> options;
 
     Json::Value startkey(Json::arrayValue);
-    startkey.append((unsigned int) time(NULL));
+    startkey.append((long long int) time(NULL));
 
     options["include_docs"] = "true";
     options["startkey"] = CouchDB::Database::json_query_value(startkey);

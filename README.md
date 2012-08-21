@@ -8,6 +8,7 @@ You will need these dependencies:
 
  - [JsonCpp](http://jsoncpp.sourceforge.net/)
  - [libcURL](http://curl.haxx.se/)
+ - habitat (for habitat.utils.rfc3339, to test the Uploader.)
 
 Both build from source fairly easily, but the easiest way to acquire them for
 Ubuntu is:
