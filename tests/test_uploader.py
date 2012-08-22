@@ -17,6 +17,7 @@ import xml.etree.cElementTree as ET
 import urllib
 
 from habitat.utils import rfc3339
+from habitat import views
 
 class ProxyException:
     def __init__(self, name, what=None):
@@ -166,8 +167,8 @@ class Proxy:
     def listener_telemetry(self, data, *args):
         return self._proxy(["listener_telemetry", data] + list(args))
 
-    def listener_info(self, data, *args):
-        return self._proxy(["listener_info", data] + list(args))
+    def listener_information(self, data, *args):
+        return self._proxy(["listener_information", data] + list(args))
 
     def flights(self):
         return self._proxy(["flights"])
@@ -206,7 +207,8 @@ class MockHTTP(BaseHTTPServer.HTTPServer):
         "method": "GET",
         "path": "/",
         "body": None,   # string if you expect something from a POST
-        # body_json=object
+        # "body_json": {'object': True}
+        "validate_body_json": True,
 
         # and respond with:
         "code": 404,
@@ -219,6 +221,18 @@ class MockHTTP(BaseHTTPServer.HTTPServer):
 
         e = self.expect_defaults.copy()
         e.update(kwargs)
+
+        if "body_json" in e and e["validate_body_json"]:
+            old = e.get("validate_old", None)
+            new = e["body_json"]
+
+            userctx = {'roles': []}
+            secobj = {}
+
+            for mod in [views.flight, views.listener_information,
+                        views.listener_telemetry, views.payload_telemetry,
+                        views.payload_configuration, views.habitat]:
+                mod.validate(new, old, userctx, secobj)
 
         self.expect_queue.append(e)
 
@@ -377,7 +391,8 @@ class TestCPPConnector:
                 "time_uploaded": self.callbacks.fake_rfc3339(i),
                 "data": {
                     "callsign": "PROXYCALL",
-                    "test": 123.356
+                    "latitude": 3.12,
+                    "longitude": -123.1
                 },
                 "type": "listener_telemetry"
             }
@@ -386,14 +401,20 @@ class TestCPPConnector:
 
         self.couchdb.run()
 
+        data = {
+            "latitude": 3.12,
+            "longitude": -123.1
+        }
+
         for i in xrange(200):
-            doc_id = self.uploader.listener_telemetry({"test": 123.356})
+            doc_id = self.uploader.listener_telemetry(data)
             assert doc_id == should_use_uuids[i]
 
         self.couchdb.check()
 
     def add_sample_listener_docs(self):
-        telemetry_data = {"some_data": 123, "_flag": True}
+        telemetry_data = {"latitude": 1.0, "longitude": 2.0,
+                          "some_data": 123, "_flag": True}
         telemetry_doc = {
             "_id": self.pop_uuid(),
             "data": copy.deepcopy(telemetry_data),
@@ -407,7 +428,7 @@ class TestCPPConnector:
         info_doc = {
             "_id": self.pop_uuid(),
             "data": copy.deepcopy(info_data),
-            "type": "listener_info",
+            "type": "listener_information",
             "time_created": self.callbacks.fake_rfc3339(0),
             "time_uploaded": self.callbacks.fake_rfc3339(0)
         }
@@ -419,7 +440,7 @@ class TestCPPConnector:
         self.couchdb.run()
         self.sample_telemetry_doc_id = \
                 self.uploader.listener_telemetry(telemetry_data)
-        self.sample_info_doc_id = self.uploader.listener_info(info_data)
+        self.sample_info_doc_id = self.uploader.listener_information(info_data)
         self.couchdb.check()
 
         assert self.sample_telemetry_doc_id == telemetry_doc["_id"]
@@ -453,7 +474,7 @@ class TestCPPConnector:
         info_doc = {
             "_id": self.pop_uuid(),
             "data": copy.deepcopy(info_data),
-            "type": "listener_info",
+            "type": "listener_information",
             "time_created": self.callbacks.fake_rfc3339(409),
             "time_uploaded": self.callbacks.fake_rfc3339(1005)
         }
@@ -467,7 +488,7 @@ class TestCPPConnector:
         telemetry_doc_id = \
             self.uploader.listener_telemetry(telemetry_data,
                     self.callbacks.fake_timestamp(501))
-        info_doc_id = self.uploader.listener_info(info_data,
+        info_doc_id = self.uploader.listener_information(info_data,
                     self.callbacks.fake_timestamp(409))
         self.couchdb.check()
 
@@ -523,7 +544,7 @@ class TestCPPConnector:
             "time_created": self.callbacks.fake_rfc3339(0),
             "time_uploaded": self.callbacks.fake_rfc3339(0),
             "latest_listener_telemetry": self.sample_telemetry_doc_id,
-            "latest_listener_info": self.sample_info_doc_id
+            "latest_listener_information": self.sample_info_doc_id
         }
 
         doc = copy.deepcopy(self.ptlm_doc)
@@ -583,7 +604,7 @@ class TestCPPConnector:
         receiver_info["time_uploaded"] = self.callbacks.fake_rfc3339(10)
         doc_merged["receivers"]["PROXYCALL"].update(receiver_info)
 
-        self.expect_save_doc(doc_merged)
+        self.expect_save_doc(doc_merged, validate_old=self.ptlm_doc_existing)
 
         self.couchdb.run()
         self.uploader.payload_telemetry(self.ptlm_string, self.ptlm_metadata)
@@ -668,6 +689,7 @@ class TestCPPConnector:
                 method="PUT",
                 path=self.db_path + self.ptlm_doc_id,
                 body_json=doc_merged,
+                validate_old=doc_existing,
                 code=409,
                 respond_json={"error": "conflict"},
                 advance_time_after=1
@@ -697,7 +719,7 @@ class TestCPPConnector:
             respond_json=final_doc_existing,
         )
 
-        self.expect_save_doc(final_doc_merged)
+        self.expect_save_doc(final_doc_merged, validate_old=final_doc_existing)
 
         self.couchdb.run()
         self.uploader.payload_telemetry(self.ptlm_string, self.ptlm_metadata)
@@ -787,7 +809,8 @@ class TestCPPConnectorThreaded(TestCPPConnector):
     command = "tests/cpp_connector_threaded"
 
     def test_queues_things(self):
-        telemetry_data = {"this was queued": True}
+        telemetry_data = {"this was queued": True,
+                          "latitude": 1.0, "longitude": 2.0}
         telemetry_doc = {
             "_id": self.pop_uuid(),
             "data": copy.deepcopy(telemetry_data),
@@ -801,7 +824,7 @@ class TestCPPConnectorThreaded(TestCPPConnector):
         info_doc = {
             "_id": self.pop_uuid(),
             "data": copy.deepcopy(info_data),
-            "type": "listener_info",
+            "type": "listener_information",
             "time_created": self.callbacks.fake_rfc3339(0),
             "time_uploaded": self.callbacks.fake_rfc3339(0)
         }
@@ -818,7 +841,7 @@ class TestCPPConnectorThreaded(TestCPPConnector):
         self.couchdb.run()
 
         self.run_unblocked(self.uploader.listener_telemetry, telemetry_data)
-        self.run_unblocked(self.uploader.listener_info, info_data)
+        self.run_unblocked(self.uploader.listener_information, info_data)
 
         # The complexity of doing this properly justifies this evil hack...
         # right?

@@ -80,8 +80,8 @@ string UploaderListenerTelemetry::describe()
 void UploaderListenerInfo::apply(UploaderThread &uthr)
 {
     check(uthr.uploader.get());
-    string result = uthr.uploader->listener_info(data, time_created);
-    uthr.saved_id("listener_info", result);
+    string result = uthr.uploader->listener_information(data, time_created);
+    uthr.saved_id("listener_information", result);
 }
 
 string UploaderListenerInfo::describe()
@@ -90,7 +90,7 @@ string UploaderListenerInfo::describe()
     Json::FastWriter writer;
     string data_json = writer.write(data);
     data_json.erase(data_json.length() - 1, 1);
-    ss << "Uploader.listener_info(" << data_json << ", " 
+    ss << "Uploader.listener_information(" << data_json << ", " 
        << time_created << ")";
     return ss.str();
 }
@@ -178,8 +178,8 @@ void UploaderThread::listener_telemetry(const Json::Value &data,
     queue_action(new UploaderListenerTelemetry(data, time_created));
 }
 
-void UploaderThread::listener_info(const Json::Value &data,
-                                   int time_created)
+void UploaderThread::listener_information(const Json::Value &data,
+                                          int time_created)
 {
     queue_action(new UploaderListenerInfo(data, time_created));
 }

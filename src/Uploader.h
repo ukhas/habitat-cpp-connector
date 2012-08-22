@@ -36,7 +36,7 @@ class Uploader
     CouchDB::Server server;
     CouchDB::Database database;
     const int max_merge_attempts;
-    string latest_listener_info;
+    string latest_listener_information;
     string latest_listener_telemetry;
 
     string listener_doc(const char *type, const Json::Value &data,
@@ -51,10 +51,11 @@ public:
     string payload_telemetry(const string &data,
                              const Json::Value &metadata=Json::Value::null,
                              long long int time_created=-1);
+    /* note that latitude, longitude are required properties of data */
     string listener_telemetry(const Json::Value &data,
                               long long int time_created=-1);
-    string listener_info(const Json::Value &data,
-                         long long int time_created=-1);
+    string listener_information(const Json::Value &data,
+                                long long int time_created=-1);
     vector<Json::Value> *flights();
     vector<Json::Value> *payloads();
 };

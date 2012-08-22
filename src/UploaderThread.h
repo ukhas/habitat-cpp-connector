@@ -174,7 +174,7 @@ public:
                            const Json::Value &metadata=Json::Value::null,
                            int time_created=-1);
     void listener_telemetry(const Json::Value &data, int time_created=-1);
-    void listener_info(const Json::Value &data, int time_created=-1);
+    void listener_information(const Json::Value &data, int time_created=-1);
     void flights();
     void payloads();
     void shutdown();

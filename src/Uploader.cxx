@@ -148,7 +148,7 @@ string Uploader::payload_telemetry(const string &data,
     {
         if (metadata.isMember("time_created") ||
             metadata.isMember("time_uploaded") ||
-            metadata.isMember("latest_listener_info") ||
+            metadata.isMember("latest_listener_information") ||
             metadata.isMember("latest_listener_telemetry"))
         {
             throw invalid_argument("found forbidden key in metadata");
@@ -162,8 +162,9 @@ string Uploader::payload_telemetry(const string &data,
         throw invalid_argument("metadata must be an object/dict or null");
     }
 
-    if (latest_listener_info.length())
-        receiver_info["latest_listener_info"] = latest_listener_info;
+    if (latest_listener_information.length())
+        receiver_info["latest_listener_information"] =
+            latest_listener_information;
 
     if (latest_listener_telemetry.length())
         receiver_info["latest_listener_telemetry"] = latest_listener_telemetry;
@@ -238,14 +239,14 @@ string Uploader::listener_telemetry(const Json::Value &data,
     return latest_listener_telemetry;
 }
 
-string Uploader::listener_info(const Json::Value &data,
-                               long long int time_created)
+string Uploader::listener_information(const Json::Value &data,
+                                      long long int time_created)
 {
     EZ::MutexLock lock(mutex);
 
-    latest_listener_info =
-        listener_doc("listener_info", data, time_created);
-    return latest_listener_info;
+    latest_listener_information =
+        listener_doc("listener_information", data, time_created);
+    return latest_listener_information;
 }
 
 vector<Json::Value> *Uploader::flights()

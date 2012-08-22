@@ -70,7 +70,8 @@ static void proxy_constructor(TestSubject *u, Json::Value command);
 static void proxy_reset(TestSubject *u);
 #endif
 
-static r_string proxy_listener_info(TestSubject *u, Json::Value command);
+static r_string proxy_listener_information(TestSubject *u,
+                                           Json::Value command);
 static r_string proxy_listener_telemetry(TestSubject *u, Json::Value command);
 static r_string proxy_payload_telemetry(TestSubject *u, Json::Value command);
 static r_json proxy_flights(TestSubject *u);
@@ -122,8 +123,8 @@ int main(int argc, char **argv)
 
             if (command_name == "init")
                 u.reset(proxy_constructor(command));
-            else if (command_name == "listener_info")
-                return_value = proxy_listener_info(u.get(), command);
+            else if (command_name == "listener_information")
+                return_value = proxy_listener_information(u.get(), command);
             else if (command_name == "listener_telemetry")
                 return_value = proxy_listener_telemetry(u.get(), command);
             else if (command_name == "payload_telemetry")
@@ -194,8 +195,8 @@ int main(int argc, char **argv)
             proxy_constructor(&thread, command);
         else if (command_name == "reset")
             proxy_reset(&thread);
-        else if (command_name == "listener_info")
-            proxy_listener_info(&thread, command);
+        else if (command_name == "listener_information")
+            proxy_listener_information(&thread, command);
         else if (command_name == "listener_telemetry")
             proxy_listener_telemetry(&thread, command);
         else if (command_name == "payload_telemetry")
@@ -323,15 +324,15 @@ static void proxy_reset(TestSubject *u)
 }
 #endif
 
-static r_string proxy_listener_info(TestSubject *u, Json::Value command)
+static r_string proxy_listener_information(TestSubject *u, Json::Value command)
 {
     const Json::Value &data = command[1u];
     const Json::Value &tc = command[2u];
 
     if (tc.isNull())
-        return u->listener_info(data);
+        return u->listener_information(data);
     else
-        return u->listener_info(data, tc.asInt());
+        return u->listener_information(data, tc.asInt());
 }
 
 static r_string proxy_listener_telemetry(TestSubject *u, Json::Value command)
