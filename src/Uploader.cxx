@@ -254,7 +254,11 @@ vector<Json::Value> *Uploader::flights()
     map<string,string> options;
 
     Json::Value startkey(Json::arrayValue);
+#ifdef JSON_HAS_INT64
     startkey.append((Json::Int64) time(NULL));
+#else
+    startkey.append((Json::Int) time(NULL));
+#endif
 
     options["include_docs"] = "true";
     options["startkey"] = CouchDB::Database::json_query_value(startkey);

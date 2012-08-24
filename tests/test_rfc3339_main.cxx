@@ -58,7 +58,11 @@ void handle_command(const Json::Value &command)
     }
     else
     {
+#ifdef JSON_HAS_INT64
         int_arg = command[1u].asLargestInt();
+#else
+        int_arg = command[1u].asInt();
+#endif
     }
 
     try
