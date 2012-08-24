@@ -11,6 +11,14 @@
 #include <stdexcept>
 #include <iomanip>
 
+/* on mingw32, localtime_r and gmtime_r don't exist. Instead, pthreadsw32's
+ * pthread.h provides macros that map calls from localtime_r to localtime(),
+ * (and the same for gmtime), noting that "[the] WIN32 C runtime library has
+ * been made thread-safe without affecting the user interface."
+ *
+ * tl;dr: need to include pthread.h to get localtime_r on mingw32 */
+#include <pthread.h>
+
 using namespace std;
 
 namespace RFC3339 {
