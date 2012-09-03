@@ -749,6 +749,8 @@ class TestCPPConnector:
         for i in xrange(100):
             pcfgs.append({"_id": "pcfg_{0}".format(i),
                           "type": "payload_configuration", "i": i})
+        for i in xrange(20):
+            pcfgs.append({"_id": "nonexistant_{0}".format(i)})
         for i in xrange(100):
             payloads = random.sample(pcfgs, random.randint(1, 5))
             doc = {"_id": "flight_{0}", "type": "flight", "i": i,
@@ -758,12 +760,22 @@ class TestCPPConnector:
             end = self.callbacks.fake_rfc3339(2000 + i)
             rows.append({"id": doc["_id"], "key": [end, start, 0],
                         "value": None, "doc": doc})
+
+            expect_payloads = []
             for p in payloads:
+                p_id = p["_id"]
+                if "nonexistant" in p_id:
+                    # nonexistant referenced docs should not be in 
+                    # _payload_docs
+                    p = None
+                else:
+                    expect_payloads.append(p)
+
                 rows.append({"id": doc["_id"], "key": [end, start, 1],
-                            "value": {"_id": p["_id"]}, "doc": p})
+                            "value": {"_id": p_id}, "doc": p})
 
             doc = copy.deepcopy(doc)
-            doc["_payload_docs"] = payloads
+            doc["_payload_docs"] = expect_payloads
             expect_result.append(doc)
 
         fake_view_response = \

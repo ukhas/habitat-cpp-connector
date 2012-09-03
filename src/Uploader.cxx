@@ -290,14 +290,19 @@ vector<Json::Value> *Uploader::flights()
 
         const Json::Value &key = row["key"], &doc = row["doc"];
 
-        if (!doc.isObject() || !key.isArray() || key.size() != 3 ||
-                !key[2u].isIntegral())
-            throw runtime_error("Invalid response: bad key or doc in row");
+        bool doc_ok = doc.isObject() && doc.size();
+        bool key_ok = key.isArray() && key.size() == 3 && key[2u].isIntegral();
+
+        if (!key_ok)
+            throw runtime_error("Invalid response: bad key in row");
 
         bool is_pcfg = key[2u].asBool();
 
         if (!is_pcfg)
         {
+            if (!doc_ok)
+                throw runtime_error("Invalid response: bad doc in row");
+
             result->push_back(doc);
             /* copies the doc */
 
@@ -307,7 +312,8 @@ vector<Json::Value> *Uploader::flights()
         }
         else
         {
-            current_pcfg_list->append(doc);
+            if (doc_ok)
+                current_pcfg_list->append(doc);
         }
     }
 
