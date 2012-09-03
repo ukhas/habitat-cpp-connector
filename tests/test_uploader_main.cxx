@@ -50,6 +50,9 @@ class TestUploaderThread : public habitat::UploaderThread
 
     void reset_done() { report_result("return"); };
 
+    void caught_exception(const habitat::NotInitialisedError &error)
+        { report_result("error", "NotInitialisedError"); }
+
     void caught_exception(const runtime_error &error)
         { report_result("error", "runtime_error", error.what()); }
 

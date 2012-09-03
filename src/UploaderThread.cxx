@@ -9,7 +9,7 @@ namespace habitat {
 void UploaderAction::check(habitat::Uploader *u)
 {
     if (u == NULL)
-        throw runtime_error("Uploader settings were not initialised");
+        throw NotInitialisedError();
 }
 
 void UploaderSettings::apply(UploaderThread &uthr)
@@ -224,6 +224,11 @@ void *UploaderThread::run()
         {
             break;
         }
+        catch (NotInitialisedError &e)
+        {
+            caught_exception(e);
+            continue;
+        }
         catch (runtime_error &e)
         {
             caught_exception(e);
@@ -259,6 +264,12 @@ void UploaderThread::initialised()
 void UploaderThread::reset_done()
 {
     log("Settings reset");
+}
+
+void UploaderThread::caught_exception(const NotInitialisedError &error)
+{
+    const string what(error.what());
+    warning("Caught NotInitialisedError");
 }
 
 void UploaderThread::caught_exception(const runtime_error &error)

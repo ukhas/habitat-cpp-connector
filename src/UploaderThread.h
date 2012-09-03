@@ -13,6 +13,12 @@ using namespace std;
 /* Add some more EZ stuff. */
 namespace habitat {
 
+class NotInitialisedError : public runtime_error
+{
+public:
+    NotInitialisedError() : runtime_error("habitat::NotInitialisedError") {};
+};
+
 class UploaderThread;
 
 class UploaderAction
@@ -187,6 +193,7 @@ public:
     virtual void saved_id(const string &type, const string &id);
     virtual void initialised();
     virtual void reset_done();
+    virtual void caught_exception(const NotInitialisedError &error);
     virtual void caught_exception(const runtime_error &error);
     virtual void caught_exception(const invalid_argument &error);
     virtual void got_flights(const vector<Json::Value> &flights);

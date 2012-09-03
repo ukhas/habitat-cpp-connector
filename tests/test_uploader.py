@@ -916,7 +916,7 @@ class TestCPPConnectorThreaded(TestCPPConnector):
         try:
             self.uploader.payload_telemetry("asdf", {})
         except ProxyException as e:
-            assert "not initialised" in str(e)
+            assert "NotInitialised" in str(e)
         else:
             raise AssertionError("not initialised was not thrown")
 
