@@ -233,7 +233,7 @@ class TestUKHASExtractor:
 
     crude_parse_flight_doc = {
         "sentences": [ {
-            "payload": "TESTING",
+            "callsign": "TESTING",
             "checksum": "crc16-ccitt",
             "fields": [
                 {"name": "field_a"},
@@ -281,10 +281,10 @@ class TestUKHASExtractor:
 
     multi_config_flight_doc = {
         "sentences": [
-            { "payload": "AWKWARD",
+            { "callsign": "AWKWARD",
               "checksum": "crc16-ccitt",
               "fields": [ {"name": "fa"}, {"name": "fo"}, {"name": "fc"} ] },
-            { "payload": "AWKWARD",
+            { "callsign": "AWKWARD",
               "checksum": "crc16-ccitt",
               "fields": [ {"name": "fa"}, {"name": "fb"} ] }
         ]
@@ -312,7 +312,7 @@ class TestUKHASExtractor:
 
     ddmmmmmm_flight_doc = {
         "sentences": [ {
-            "payload": "TESTING",
+            "callsign": "TESTING",
             "checksum": "crc16-ccitt",
             "fields": [
                 {"sensor":"stdtelem.coordinate","name":"lat_a",

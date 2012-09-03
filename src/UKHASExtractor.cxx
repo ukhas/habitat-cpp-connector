@@ -320,17 +320,18 @@ static void attempt_settings(Json::Value &data, const Json::Value &sentence,
                              const string &checksum_name,
                              const vector<string> &parts)
 {
-    if (!sentence.isObject())
-        throw runtime_error("Invalid configuration (sentence not an object)");
+    if (!sentence.isObject() || !sentence["callsign"].isString() ||
+        !sentence["fields"].isArray() || !sentence["fields"].size())
+        throw runtime_error("Invalid configuration "
+                                "(missing callsign or fields)");
 
-    const Json::Value &fields = sentence["fields"];
-
-    const string callsign = sentence["payload"].asString();
-    if (parts[0] != callsign)
+    if (sentence["callsign"] != parts[0])
         throw runtime_error("Incorrect callsign");
 
     if (sentence["checksum"] != checksum_name)
         throw runtime_error("Wrong checksum type");
+
+    const Json::Value &fields = sentence["fields"];
 
     if (fields.size() != (parts.size() - 1))
         throw runtime_error("Incorrect number of fields");
