@@ -1,13 +1,13 @@
 /* Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see COPYING. */
 
 #include "UKHASExtractor.h"
-#include <jsoncpp.h>
 #include <stdexcept>
 #include <string>
 #include <sstream>
 #include <algorithm>
 #include <stdio.h>
 #include <stdint.h>
+#include "jsoncpp.h"
 
 using namespace std;
 

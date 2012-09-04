@@ -3,12 +3,12 @@
 #ifndef HABITAT_COUCHDB_H
 #define HABITAT_COUCHDB_H
 
-#include <jsoncpp.h>
 #include <string>
 #include <iostream>
 #include <deque>
 #include <stdexcept>
 #include <curl/curl.h>
+#include "jsoncpp.h"
 
 #include "EZ.h"
 

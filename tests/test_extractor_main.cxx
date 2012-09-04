@@ -2,9 +2,9 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <jsoncpp.h>
 #include <memory>
 
+#include "jsoncpp.h"
 #include "Extractor.h"
 #include "UKHASExtractor.h"
 
