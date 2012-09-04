@@ -5,7 +5,7 @@
 #include <ctime>
 
 #include "jsoncpp.h"
-#include "RFC3339.h"
+#include "habitat/RFC3339.h"
 
 using namespace std;
 

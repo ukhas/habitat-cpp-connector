@@ -1,6 +1,6 @@
 /* Copyright 2011-2012 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
 
-#include "UploaderThread.h"
+#include "habitat/UploaderThread.h"
 #include <stdexcept>
 #include <sstream>
 

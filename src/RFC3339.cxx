@@ -1,6 +1,6 @@
 /* Copyright 2012 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
 
-#include "RFC3339.h"
+#include "habitat/RFC3339.h"
 
 #include <string>
 #include <sstream>

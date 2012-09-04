@@ -1,6 +1,6 @@
 /* Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see COPYING. */
 
-#include "UKHASExtractor.h"
+#include "habitat/UKHASExtractor.h"
 #include <stdexcept>
 #include <string>
 #include <sstream>

@@ -1,6 +1,13 @@
 habitat cpp uploader (see habitat.uploader.Uploader)
 ====================================================
 
+Directories
+-----------
+
+ - jsoncpp: bundled library
+ - habitat: headers (i.e., #include "habitat/CouchDB.h")
+ - src: sources
+
 License
 -------
 

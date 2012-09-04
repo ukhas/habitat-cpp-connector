@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include "jsoncpp.h"
 
-#include "EZ.h"
+#include "habitat/EZ.h"
 
 using namespace std;
 

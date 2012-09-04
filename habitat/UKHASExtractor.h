@@ -3,7 +3,7 @@
 #ifndef HABITAT_UKHAS_EXTRACTOR_H
 #define HABITAT_UKHAS_EXTRACTOR_H
 
-#include "Extractor.h"
+#include "habitat/Extractor.h"
 
 namespace habitat {
 

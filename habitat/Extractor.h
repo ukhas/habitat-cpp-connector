@@ -5,8 +5,8 @@
 
 #include <vector>
 #include "jsoncpp.h"
-#include "UploaderThread.h"
-#include "EZ.h"
+#include "habitat/UploaderThread.h"
+#include "habitat/EZ.h"
 
 using namespace std;
 

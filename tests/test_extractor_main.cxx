@@ -5,8 +5,8 @@
 #include <memory>
 
 #include "jsoncpp.h"
-#include "Extractor.h"
-#include "UKHASExtractor.h"
+#include "habitat/Extractor.h"
+#include "habitat/UKHASExtractor.h"
 
 using namespace std;
 

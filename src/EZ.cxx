@@ -1,6 +1,6 @@
 /* Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
 
-#include "EZ.h"
+#include "habitat/EZ.h"
 #include <curl/curl.h>
 #include <pthread.h>
 #include <string>

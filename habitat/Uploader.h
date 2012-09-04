@@ -8,8 +8,8 @@
 #include <vector>
 #include <stdexcept>
 #include "jsoncpp.h"
-#include "EZ.h"
-#include "CouchDB.h"
+#include "habitat/EZ.h"
+#include "habitat/CouchDB.h"
 
 using namespace std;
 

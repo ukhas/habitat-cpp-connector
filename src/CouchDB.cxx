@@ -1,11 +1,11 @@
 /* Copyright 2011-2012 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
 
-#include "CouchDB.h"
+#include "habitat/CouchDB.h"
 #include <curl/curl.h>
 #include <string>
 #include <memory>
 #include <stdexcept>
-#include "EZ.h"
+#include "habitat/EZ.h"
 
 using namespace std;
 

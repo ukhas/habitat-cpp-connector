@@ -3,10 +3,10 @@
 #ifndef HABITAT_UPLOADERTHREAD_H
 #define HABITAT_UPLOADERTHREAD_H
 
-#include "EZ.h"
-#include "Uploader.h"
 #include <memory>
 #include "jsoncpp.h"
+#include "habitat/EZ.h"
+#include "habitat/Uploader.h"
 
 using namespace std;
 

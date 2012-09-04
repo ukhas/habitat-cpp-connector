@@ -1,8 +1,8 @@
 /* Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see COPYING. */
 
-#include "Extractor.h"
+#include "habitat/Extractor.h"
 #include <vector>
-#include "EZ.h"
+#include "habitat/EZ.h"
 
 namespace habitat {
 

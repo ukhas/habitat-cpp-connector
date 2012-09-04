@@ -9,7 +9,7 @@ ssl_cflags := $(shell pkg-config --cflags openssl)
 ssl_libs := $(shell pkg-config --libs openssl)
 
 CFLAGS = -pthread -O2 -Wall -Werror -pedantic -Wno-long-long \
-         -Wno-variadic-macros -Isrc \
+         -Wno-variadic-macros -I. \
 		 $(jsoncpp_cflags) $(curl_cflags) $(ssl_cflags)
 CFLAGS_JSONCPP = -pthread -O2 -Wall $(jsoncpp_cflags)
 upl_libs = -pthread $(curl_libs) $(ssl_libs)
@@ -17,9 +17,7 @@ ext_libs = $(jsoncpp_libs)
 rfc_libs = $(jsoncpp_libs)
 
 test_py_files = tests/test_uploader.py tests/test_extractor.py
-headers = src/CouchDB.h src/EZ.h src/RFC3339.h \
-          src/Uploader.h src/UploaderThread.h \
-          src/Extractor.h src/UKHASExtractor.h \
+headers = $(wildcard habitat/*.h) \
           tests/test_extractor_mocks.h
 rfc_cxxfiles = src/RFC3339.cxx tests/test_rfc3339_main.cxx
 rfc_binary = tests/rfc3339

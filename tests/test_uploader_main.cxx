@@ -5,11 +5,11 @@
 #include <stdexcept>
 #include <ctime>
 
-#include "EZ.h"
-#include "Uploader.h"
+#include "habitat/EZ.h"
+#include "habitat/Uploader.h"
 
 #ifdef THREADED
-#include "UploaderThread.h"
+#include "habitat/UploaderThread.h"
 #endif
 
 using namespace std;

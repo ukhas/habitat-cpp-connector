@@ -1,6 +1,6 @@
 /* Copyright 2011-2012 (C) Daniel Richman. License: GNU GPL 3; see LICENSE. */
 
-#include "Uploader.h"
+#include "habitat/Uploader.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -9,9 +9,9 @@
 #include <openssl/sha.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
-#include "CouchDB.h"
-#include "EZ.h"
-#include "RFC3339.h"
+#include "habitat/CouchDB.h"
+#include "habitat/EZ.h"
+#include "habitat/RFC3339.h"
 
 using namespace std;
 
