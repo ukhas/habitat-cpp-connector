@@ -1,7 +1,7 @@
 /* Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see COPYING. */
 
 #include "UKHASExtractor.h"
-#include <json/json.h>
+#include <jsoncpp.h>
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -347,13 +347,11 @@ Json::Value UKHASExtractor::crude_parse()
 
     if (!settings_ptr)
         settings_ptr = &(Json::Value::null);
-
-    const Json::Value &settings = *settings_ptr;
-
-    if (!settings.isObject())
-        /* note: Json::Value::null.isObject() == true */
+    else if (!settings_ptr->isObject())
         throw runtime_error("Invalid configuration: "
                 "settings is not an object");
+
+    const Json::Value &settings = *settings_ptr;
 
     string data, checksum;
     split_string(buffer, &data, &checksum);

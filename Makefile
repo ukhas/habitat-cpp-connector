@@ -2,8 +2,7 @@
 # -*- makefile -*-
 # Copyright 2011 (C) Daniel Richman. License: GNU GPL 3; see LICENSE.
 
-jsoncpp_cflags := $(shell pkg-config --cflags jsoncpp)
-jsoncpp_libs := $(shell pkg-config --libs jsoncpp)
+jsoncpp_cflags := -Ijsoncpp/
 curl_cflags := $(shell pkg-config --cflags libcurl)
 curl_libs := $(shell pkg-config --libs libcurl)
 ssl_cflags := $(shell pkg-config --cflags openssl)
@@ -12,7 +11,8 @@ ssl_libs := $(shell pkg-config --libs openssl)
 CFLAGS = -pthread -O2 -Wall -Werror -pedantic -Wno-long-long \
          -Wno-variadic-macros -Isrc \
 		 $(jsoncpp_cflags) $(curl_cflags) $(ssl_cflags)
-upl_libs = -pthread $(jsoncpp_libs) $(curl_libs) $(ssl_libs)
+CFLAGS_JSONCPP = -pthread -O2 -Wall $(jsoncpp_cflags)
+upl_libs = -pthread $(curl_libs) $(ssl_libs)
 ext_libs = $(jsoncpp_libs)
 rfc_libs = $(jsoncpp_libs)
 
@@ -35,12 +35,16 @@ ext_binary = tests/extractor
 ext_mock_cflags = -include tests/test_extractor_mocks.h
 
 CXXFLAGS = $(CFLAGS)
-upl_objects = $(patsubst %.cxx,%.o,$(upl_cxxfiles))
-ext_objects = $(patsubst %.cxx,%.ext_mock.o,$(ext_cxxfiles))
-rfc_objects = $(patsubst %.cxx,%.o,$(rfc_cxxfiles))
+CXXFLAGS_JSONCPP = $(CFLAGS_JSONCPP)
+upl_objects = jsoncpp/jsoncpp.o $(patsubst %.cxx,%.o,$(upl_cxxfiles))
+ext_objects = jsoncpp/jsoncpp.o $(patsubst %.cxx,%.ext_mock.o,$(ext_cxxfiles))
+rfc_objects = jsoncpp/jsoncpp.o $(patsubst %.cxx,%.o,$(rfc_cxxfiles))
 
 %.o : %.cxx $(headers)
 	g++ -c $(CXXFLAGS) -o $@ $<
+
+jsoncpp/jsoncpp.o : jsoncpp/jsoncpp.cpp jsoncpp/jsoncpp.h
+	g++ -c $(CXXFLAGS_JSONCPP) -o $@ $<
 
 %.threaded.o : %.cxx $(headers)
 	g++ -c $(CXXFLAGS) $(upl_thr_cflags) -o $@ $<
