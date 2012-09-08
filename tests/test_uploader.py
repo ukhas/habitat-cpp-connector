@@ -753,12 +753,13 @@ class TestCPPConnector:
             pcfgs.append({"_id": "nonexistant_{0}".format(i)})
         for i in xrange(100):
             payloads = random.sample(pcfgs, random.randint(1, 5))
-            doc = {"_id": "flight_{0}", "type": "flight", "i": i,
+            f_id = "flight_{0}".format(i)
+            doc = {"_id": f_id, "type": "flight", "i": i,
                    "payloads": [p["_id"] for p in payloads]}
 
             start = self.callbacks.fake_rfc3339(1000 + i)
             end = self.callbacks.fake_rfc3339(2000 + i)
-            rows.append({"id": doc["_id"], "key": [end, start, 0],
+            rows.append({"id": f_id, "key": [end, start, f_id, 0],
                         "value": None, "doc": doc})
 
             expect_payloads = []
@@ -771,7 +772,7 @@ class TestCPPConnector:
                 else:
                     expect_payloads.append(p)
 
-                rows.append({"id": doc["_id"], "key": [end, start, 1],
+                rows.append({"id": f_id, "key": [end, start, f_id, 1],
                             "value": {"_id": p_id}, "doc": p})
 
             doc = copy.deepcopy(doc)

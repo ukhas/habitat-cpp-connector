@@ -291,12 +291,12 @@ vector<Json::Value> *Uploader::flights()
         const Json::Value &key = row["key"], &doc = row["doc"];
 
         bool doc_ok = doc.isObject() && doc.size();
-        bool key_ok = key.isArray() && key.size() == 3 && key[2u].isIntegral();
+        bool key_ok = key.isArray() && key.size() == 4 && key[3u].isIntegral();
 
         if (!key_ok)
             throw runtime_error("Invalid response: bad key in row");
 
-        bool is_pcfg = key[2u].asBool();
+        bool is_pcfg = key[3u].asBool();
 
         if (!is_pcfg)
         {
