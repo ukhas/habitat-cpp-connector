@@ -176,9 +176,12 @@ public:
                   const string &couch_db="habitat",
                   int max_merge_attempts=20);
     void reset();
-    void payload_telemetry(const string &data,
-                           const Json::Value &metadata=Json::Value::null,
-                           int time_created=-1);
+
+    /* virtual, so that the ExtractorManager can be given a UploaderThread
+     * reference */
+    virtual void payload_telemetry(const string &data,
+                                   const Json::Value &metadata=Json::Value::null,
+                                   int time_created=-1);
     void listener_telemetry(const Json::Value &data, int time_created=-1);
     void listener_information(const Json::Value &data, int time_created=-1);
     void flights();
@@ -188,6 +191,7 @@ public:
     void *run();
     void detach();
 
+    /* virtual, for the subclass to implement */
     virtual void log(const string &message) = 0;
     virtual void warning(const string &message);
     virtual void saved_id(const string &type, const string &id);
