@@ -278,7 +278,7 @@ string cURL::post(const string &url, const string &data)
 
     reset();
 
-    /* Disable "Expect: 100-continue" - see issue #30 */
+    /* Disable "Expect: 100-continue" - see issue dl-fldigi#30 */
     cURLslist headers;
     headers.append("Expect:");
 
@@ -322,7 +322,7 @@ string cURL::put(const string &url, const string &data)
 
     reset();
 
-    /* issue #30 */
+    /* issue dl-fldigi#30 */
     cURLslist headers;
     headers.append("Expect:");
 

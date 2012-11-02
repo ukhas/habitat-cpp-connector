@@ -282,7 +282,7 @@ class MockHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if support_100 and expect_100:
             self.wfile.write(self.protocol_version + " 100 Continue\r\n\r\n")
-            # See issue #30
+            # See issue dl-fldigi#30
             raise AssertionError("Client used 100-continue!")
 
         length = self.headers.getheader('content-length')
