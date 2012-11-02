@@ -140,7 +140,7 @@ class cURLslist
 
 public:
     cURLslist() { slist = NULL; };
-    void append(const char *s) { curl_slist_append(slist, s); };
+    void append(const char *s) { slist = curl_slist_append(slist, s); };
     ~cURLslist() { curl_slist_free_all(slist); };
     const struct curl_slist *get() { return slist; };
 };

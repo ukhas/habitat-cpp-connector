@@ -277,8 +277,14 @@ string cURL::post(const string &url, const string &data)
     MutexLock lock(mutex);
 
     reset();
+
+    /* Disable "Expect: 100-continue" - see issue #30 */
+    cURLslist headers;
+    headers.append("Expect:");
+
     setopt(CURLOPT_POSTFIELDS, data.c_str());
     setopt(CURLOPT_POSTFIELDSIZE, data.length());
+    setopt(CURLOPT_HTTPHEADER, headers.get());
 
     return cURL::perform(url);
 }
@@ -315,7 +321,13 @@ string cURL::put(const string &url, const string &data)
     MutexLock lock(mutex);
 
     reset();
+
+    /* issue #30 */
+    cURLslist headers;
+    headers.append("Expect:");
+
     setopt(CURLOPT_UPLOAD, 1);
+    setopt(CURLOPT_HTTPHEADER, headers.get());
 
     struct read_func_userdata userdata;
     userdata.data = &data;
