@@ -353,6 +353,7 @@ string cURL::perform(const string &url)
 {
     string response;
 
+    setopt(CURLOPT_NOSIGNAL, 1);
     setopt(CURLOPT_URL, url.c_str());
     setopt(CURLOPT_WRITEFUNCTION, write_func);
     setopt(CURLOPT_WRITEDATA, &response);
