@@ -22,13 +22,6 @@ public:
     UnmergeableError(const string &what) : runtime_error(what) {};
 };
 
-class CollisionError : public runtime_error
-{
-public:
-    CollisionError() : runtime_error("habitat::CollisionError") {};
-    CollisionError(const string &what) : runtime_error(what) {};
-};
-
 class Uploader
 {
     EZ::Mutex mutex;

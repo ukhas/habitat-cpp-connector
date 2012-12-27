@@ -97,36 +97,6 @@ static void set_time(Json::Value &thing, long long int time_created)
         RFC3339::timestamp_to_rfc3339_localoffset(time_created);
 }
 
-static void payload_telemetry_new(Json::Value &doc,
-                                  const string &data_b64,
-                                  const string &callsign,
-                                  Json::Value &receiver_info)
-{
-    doc["data"] = Json::Value(Json::objectValue);
-    doc["receivers"] = Json::Value(Json::objectValue);
-    doc["type"] = "payload_telemetry";
-
-    doc["data"]["_raw"] = data_b64;
-    doc["receivers"][callsign] = receiver_info;
-}
-
-static void payload_telemetry_merge(Json::Value &doc,
-                                    const string &data_b64,
-                                    const string &callsign,
-                                    Json::Value &receiver_info)
-{
-    if (!doc.isObject() || !doc["data"].isObject() ||
-            !doc["receivers"].isObject())
-        throw runtime_error("Server gave us an invalid payload telemetry doc");
-
-    string other_b64 = doc["data"]["_raw"].asString();
-
-    if (!other_b64.length() || other_b64 != data_b64)
-        throw CollisionError();
-
-    doc["receivers"][callsign] = receiver_info;
-}
-
 string Uploader::payload_telemetry(const string &data,
                                    const Json::Value &metadata,
                                    long long int time_created)
@@ -142,7 +112,13 @@ string Uploader::payload_telemetry(const string &data,
     if (time_created == -1)
         time_created = time(NULL);
 
-    Json::Value receiver_info;
+    Json::Value doc;
+    doc["data"] = Json::Value(Json::objectValue);
+    doc["data"]["_raw"] = data_b64;
+    doc["receivers"] = Json::Value(Json::objectValue);
+    doc["receivers"][callsign] = Json::Value(Json::objectValue);
+
+    Json::Value &receiver_info = doc["receivers"][callsign];
 
     if (metadata.isObject())
     {
@@ -169,39 +145,29 @@ string Uploader::payload_telemetry(const string &data,
     if (latest_listener_telemetry.length())
         receiver_info["latest_listener_telemetry"] = latest_listener_telemetry;
 
-    try
+    for (int attempts = 0; attempts < max_merge_attempts; attempts++)
     {
-        Json::Value doc(Json::objectValue);
-        set_time(receiver_info, time_created);
-        payload_telemetry_new(doc, data_b64, callsign, receiver_info);
-        doc["_id"] = doc_id;
-        database.save_doc(doc);
-        return doc_id;
-    }
-    catch (CouchDB::Conflict &e)
-    {
-        for (int attempts = 0; attempts < max_merge_attempts; attempts++)
+        try
         {
-            try
-            {
-                Json::Value *doc = database[doc_id];
-                auto_ptr<Json::Value> doc_destroyer(doc);
-
-                set_time(receiver_info, time_created);
-                payload_telemetry_merge(*doc, data_b64, callsign,
-                                        receiver_info);
-                database.save_doc(*doc);
-
-                return doc_id;
-            }
-            catch (CouchDB::Conflict &e)
-            {
-                continue;
-            }
+            set_time(receiver_info, time_created);
+            database.update_put("payload_telemetry", "add_listener", doc_id,
+                                doc);
+            return doc_id;
         }
-
-        throw UnmergeableError();
+        catch (CouchDB::Conflict &e)
+        {
+            continue;
+        }
+        catch (EZ::HTTPResponse &e)
+        {
+            if (e.response_code == 403 || e.response_code == 401)
+                break; // Unmergeable
+            else
+                throw;
+        }
     }
+
+    throw UnmergeableError();
 }
 
 string Uploader::listener_doc(const char *type, const Json::Value &data,
