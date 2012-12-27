@@ -36,6 +36,10 @@ public:
     Json::Value *operator[](const string &doc_id);
     Json::Value *view(const string &design_doc, const string &view_name,
                       const map<string,string> &options=view_default_options);
+    string update_put(const string &design_doc, const string &update_name,
+                      const string &doc_id, const Json::Value &payload);
+    string update_put(const string &design_doc, const string &update_name,
+                      const string &doc_id, const string &payload);
     static string json_query_value(Json::Value &value);
 };
 
