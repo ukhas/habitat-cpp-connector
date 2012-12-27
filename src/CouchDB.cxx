@@ -189,6 +189,49 @@ Json::Value *Database::view(const string &design_doc, const string &view_name,
     return server.get_json(view_url);
 }
 
+string Database::update_put(const string &design_doc,
+                            const string &update_name,
+                            const string &doc_id,
+                            const Json::Value &payload)
+{
+    Json::FastWriter writer;
+    string json_payload = writer.write(payload);
+    return update_put(design_doc, update_name, doc_id, json_payload);
+}
+
+string Database::update_put(const string &design_doc,
+                            const string &update_name,
+                            const string &doc_id,
+                            const string &payload)
+{
+    string update_url(url);
+
+    update_url.append("_design/");
+    update_url.append(EZ::cURL::escape(design_doc));
+    update_url.append("/_update/");
+    update_url.append(EZ::cURL::escape(update_name));
+
+    if (doc_id.size())
+    {
+        update_url.append("/");
+        update_url.append(doc_id);
+    }
+
+    try
+    {
+        return server.curl.put(update_url, payload);
+    }
+    catch (EZ::HTTPResponse &e)
+    {
+        /* Catch HTTP 409 Resource Conflict */
+
+        if (e.response_code != 409)
+            throw;
+
+        throw Conflict(doc_id);
+    }
+}
+
 string Database::json_query_value(Json::Value &value)
 {
     Json::FastWriter writer;

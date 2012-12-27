@@ -95,7 +95,15 @@ void StrictInt::extract(istream &in)
         return;
     }
 
-    char *temp = new char[length + 1];
+    /* len(str(2**32)) == 10 */
+    if (length >= 11)
+    {
+        in.setstate(ios_base::badbit);
+        return;
+    }
+
+    char temp[16];
+
     in.read(temp, length);
     temp[length] = 0;
 
