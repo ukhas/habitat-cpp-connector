@@ -20,9 +20,11 @@ Building dependencies
 You will need these dependencies:
 
  - [libcURL](http://curl.haxx.se/)
- - habitat (for habitat.utils.rfc3339, to test the Uploader.)
+ - [OpenSSL](http://www.openssl.org/)
+ - habitat (for habitat.views, to test the Uploader.)
+ - strict-rfc3339 (also to test the Uploader)
 
-You can build them from source or find install the libcurl4-openssl-dev package
+You can build them from source or install the libcurl4-openssl-dev package
 on Debian based systems.
 
 JsonCPP

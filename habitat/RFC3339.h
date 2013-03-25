@@ -18,7 +18,7 @@ public:
 };
 
 /*
- * This is basically a clone of habitat.utils.rfc3339, except all timestamps
+ * This is basically a clone of strict-rfc3339, except all timestamps
  * are time_t (may have restrictions on 32 bit, and they cannot be floats
  * like they can in python)
  *
