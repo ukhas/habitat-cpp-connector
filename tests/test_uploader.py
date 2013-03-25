@@ -15,8 +15,8 @@ import copy
 import random
 import xml.etree.cElementTree as ET
 import urllib
+import strict_rfc3339
 
-from habitat.utils import rfc3339
 from habitat import views
 
 class ProxyException:
@@ -46,7 +46,8 @@ class Callbacks:
 
     def fake_rfc3339(self, value):
         """what the local RFC3339 will be `value` fake seconds into the test"""
-        return rfc3339.timestamp_to_rfc3339_localoffset(1300000000 + value)
+        return strict_rfc3339.timestamp_to_rfc3339_localoffset(
+                    1300000000 + value)
 
 class Proxy:
     def __init__(self, command, callsign, couch_uri=None, couch_db=None,

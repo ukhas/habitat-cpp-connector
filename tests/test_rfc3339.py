@@ -24,6 +24,10 @@ from nose import SkipTest
 # Identical to habitat's rfc3339 tests, except with a class that proxies
 # calls to an executable and without the float tests.
 
+class ProxyInvalidFormat(ValueError):
+    pass
+
+
 class ProxyFunction(object):
     def __init__(self, process, name):
         self.p = process
@@ -38,6 +42,8 @@ class ProxyFunction(object):
             return thing
         elif response == "time_t error":
             raise ValueError("timestamp out of range for platform time_t")
+        elif thing == "RFC3339::InvalidFormat":
+            raise ProxyInvalidFormat
         else:
             raise Exception(thing)
 
@@ -77,50 +83,50 @@ class TestValidateRFC3339(object):
         self.mod.close()
 
     def test_rejects_bad_format(self):
-        assert self.validate("asdf") == False
-        assert self.validate("24822") == False
-        assert self.validate("123-345-124T123:453:213") == False
-        assert self.validate("99-09-12T12:42:21Z") == False
-        assert self.validate("99-09-12T12:42:21+00:") == False
-        assert self.validate("99-09-12T12:42:21+00:00") == False
-        assert self.validate("2012-09-12T21:-1:21") == False
+        assert not self.validate("asdf")
+        assert not self.validate("24822")
+        assert not self.validate("123-345-124T123:453:213")
+        assert not self.validate("99-09-12T12:42:21Z")
+        assert not self.validate("99-09-12T12:42:21+00:00")
+        assert not self.validate("1999-09-12T12:42:21+00:")
+        assert not self.validate("2012-09-12T21:-1:21")
 
     def test_rejects_no_offset(self):
-        assert self.validate("2012-09-12T12:42:21") == False
+        assert not self.validate("2012-09-12T12:42:21")
 
     def test_rejects_out_of_range(self):
-        assert self.validate("2012-00-12T12:42:21Z") == False
-        assert self.validate("2012-13-12T12:42:21Z") == False
-        assert self.validate("2012-09-00T12:42:21Z") == False
-        assert self.validate("2012-09-31T12:42:21Z") == False # Sep
-        assert self.validate("2012-08-31T12:42:21Z") == True # Aug
-        assert self.validate("2012-08-32T12:42:21Z") == False
-        assert self.validate("2012-09-12T24:00:00Z") == False
-        assert self.validate("2012-09-12T12:60:21Z") == False
-        assert self.validate("2012-09-12T12:42:99Z") == False
-        assert self.validate("2012-09-12T12:42:21+24:00") == False
-        assert self.validate("2012-09-12T12:42:21-24:00") == False
-        assert self.validate("2012-09-12T12:42:21+02:60") == False
+        assert not self.validate("2012-00-12T12:42:21Z")
+        assert not self.validate("2012-13-12T12:42:21Z")
+        assert not self.validate("2012-09-00T12:42:21Z")
+        assert not self.validate("2012-09-31T12:42:21Z")   # Sep
+        assert self.validate("2012-08-31T12:42:21Z")       # Aug
+        assert not self.validate("2012-08-32T12:42:21Z")
+        assert not self.validate("2012-09-12T24:00:00Z")
+        assert not self.validate("2012-09-12T12:60:21Z")
+        assert not self.validate("2012-09-12T12:42:99Z")
+        assert not self.validate("2012-09-12T12:42:21+24:00")
+        assert not self.validate("2012-09-12T12:42:21-24:00")
+        assert not self.validate("2012-09-12T12:42:21+02:60")
 
     def test_rejects_leap_seconds(self):
         # with regret :-(
-        assert self.validate("2012-06-30T23:59:60Z") == False
-        assert self.validate("2012-03-21T09:21:60Z") == False
+        assert not self.validate("2012-06-30T23:59:60Z")
+        assert not self.validate("2012-03-21T09:21:60Z")
 
     def test_handles_leapyear(self):
-        assert self.validate("2012-02-29T12:42:21Z") == True
-        assert self.validate("2012-02-30T12:42:21Z") == False
-        assert self.validate("2000-02-29T12:42:21Z") == True
-        assert self.validate("2000-02-30T12:42:21Z") == False
-        assert self.validate("2100-02-28T12:42:21Z") == True
-        assert self.validate("2100-02-29T12:42:21Z") == False
-        assert self.validate("2011-02-28T12:42:21Z") == True
-        assert self.validate("2011-02-29T12:42:21Z") == False
+        assert self.validate("2012-02-29T12:42:21Z")
+        assert not self.validate("2012-02-30T12:42:21Z")
+        assert self.validate("2000-02-29T12:42:21Z")
+        assert not self.validate("2000-02-30T12:42:21Z")
+        assert self.validate("2100-02-28T12:42:21Z")
+        assert not self.validate("2100-02-29T12:42:21Z")
+        assert self.validate("2011-02-28T12:42:21Z")
+        assert not self.validate("2011-02-29T12:42:21Z")
 
     def test_accepts_good(self):
-        assert self.validate("1994-03-14T17:00:00Z") == True
-        assert self.validate("2011-06-23T17:12:00+05:21") == True
-        assert self.validate("1992-03-14T17:04:00-01:42") == True
+        assert self.validate("1994-03-14T17:00:00Z")
+        assert self.validate("2011-06-23T17:12:00+05:21")
+        assert self.validate("1992-03-14T17:04:00-01:42")
 
 
 class TestRFC3339toTimestamp(object):
@@ -130,6 +136,16 @@ class TestRFC3339toTimestamp(object):
 
     def teardown(self):
         self.mod.close()
+
+    def test_validates(self):
+        # This string would otherwise work: it would blissfully add the
+        # offset
+        try:
+            self.func("2012-09-12T12:42:21+24:00")
+        except ProxyInvalidFormat:
+            pass
+        else:
+            raise Exception("Didn't throw InvalidFormat")
 
     def test_simple_cases(self):
         assert self.func("1996-12-19T16:39:57-08:00") == 851042397
@@ -173,6 +189,8 @@ class TestTimestampToRFC3339UTCOffset(object):
 
     def teardown(self):
         self.mod.close()
+
+
     def test_simple_cases(self):
         assert self.func(851042397) == "1996-12-20T00:39:57Z"
         assert self.func(1344457836) == "2012-08-08T20:30:36Z"
