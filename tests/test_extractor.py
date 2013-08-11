@@ -15,6 +15,47 @@ class EqualIfIn:
     def __repr__(self):
         return "<EqIn " + repr(self.test) + ">"
 
+# from habitat.views.payload_telemetry:
+def is_equal_relaxed_floats(a, b):
+    """
+    Check that a == b, allowing small float differences
+    """
+
+    if isinstance(a, list) or isinstance(a, dict):
+        # recursion
+        if isinstance(a, list):
+            if not isinstance(b, list):
+                return False
+            keys_iter = xrange(len(a))
+        else:
+            if not isinstance(b, dict):
+                return False
+            keys_iter = a
+
+        if len(a) != len(b):
+            return False
+
+        return all(is_equal_relaxed_floats(a[i], b[i]) for i in keys_iter)
+
+    elif isinstance(a, float) or isinstance(b, float):
+        if not (isinstance(a, float) or isinstance(a, int)) or \
+           not (isinstance(b, float) or isinstance(b, int)):
+            return False
+
+        # fast path
+        if a == b:
+            return True
+
+        # relaxed float comparison.
+        # Doubles provide 15-17 bits of precision. Converting to decimal and
+        # back should not introduce an error larger than 1e-15, really.
+        tolerance = max(a, b) * 1e-14
+        return abs(a - b) < tolerance
+
+    else:
+        # string, int, bool, None, ...
+        return a == b
+
 class Proxy:
     def __init__(self, command):
         self.closed = False
@@ -69,7 +110,7 @@ class Proxy:
     def check(self, match):
         obj = self._read()
         assert len(obj) >= len(match)
-        assert obj[:len(match)] == match
+        assert is_equal_relaxed_floats(obj[:len(match)], match)
 
     def _check_type(self, name, arg):
         if arg:
@@ -238,14 +279,16 @@ class TestUKHASExtractor:
             "fields": [
                 {"name": "field_a"},
                 {"name": "field_b"},
-                {"name": "field_c"}
+                {"name": "field_c"},
+                {"name": "int_d", "sensor": "base.ascii_int"},
+                {"name": "float_e", "sensor": "base.ascii_float"},
             ],
         } ]
     }
 
     def test_crude_parse_config(self):
         self.extr.set_current_payload(self.crude_parse_flight_doc)
-        string = "$$TESTING,value_a,value_b,value_c*8C3E\n"
+        string = "$$TESTING,value_a,value_b,value_c,123,453.24*CC76\n"
         self.extr.push(string)
         self.extr.check_status("start delim")
         self.extr.check_upload(string)
@@ -253,7 +296,8 @@ class TestUKHASExtractor:
         self.extr.check_data({"_sentence": string, "_parsed": True,
                               "_protocol": "UKHAS", "payload": "TESTING",
                               "field_a": "value_a", "field_b": "value_b",
-                              "field_c": "value_c"})
+                              "field_c": "value_c", "int_d": 123,
+                              "float_e": 453.24})
 
     def test_crude_checks(self):
         checks = [
@@ -335,3 +379,41 @@ class TestUKHASExtractor:
                               "_protocol": "UKHAS", "payload": "TESTING",
                               "lat_a": "0024.124583", "lat_b": "51.27545",
                               "field_b": "whatever" })
+
+    numeric_scale_flight_doc = {
+        "sentences": [ {
+            "callsign": "TESTING",
+            "checksum": "crc16-ccitt",
+            "fields": [
+                {"sensor":"base.ascii_float","name":"a"},
+                {"sensor":"base.ascii_float","name":"b"},
+                {"sensor":"base.ascii_float","name":"c"}
+            ],
+            "filters": {
+                "post": [
+                    {"filter": "un.related", "type": "normal",
+                     "some config": True},
+                    {"filter": "common.numeric_scale", "type": "normal",
+                     "source": "a", "offset": 6, "factor": 2, "round": 3},
+                    {"type": "hotfix", "ignore me": True},
+                    {"filter": "common.numeric_scale", "type": "normal",
+                     "source": "b", "destination": "b2", "factor": 0.001,
+                     "round": 3},
+                    {"filter": "common.numeric_scale", "type": "normal",
+                     "source": "b", "destination": "b3", "factor": 5}
+                ]
+            }
+        } ]
+    }
+
+    def test_numeric_scale(self):
+        self.extr.set_current_payload(self.numeric_scale_flight_doc)
+        string = "$$TESTING,100.123,0.00482123,48*60A4\n"
+        self.extr.push(string)
+        self.extr.check_status("start delim")
+        self.extr.check_upload(string)
+        self.extr.check_status("extracted")
+        self.extr.check_data({"_sentence": string, "_parsed": True,
+                              "_protocol": "UKHAS", "payload": "TESTING",
+                              "a": 206, "b": 0.00482123, "b2": 0.00000482,
+                              "b3": 0.00482123 * 5, "c": 48})

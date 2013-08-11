@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
 #include <stdio.h>
 #include <stdint.h>
 #include "jsoncpp.h"
@@ -277,6 +278,22 @@ static string convert_ddmmmm(const string &value)
     return os.str();
 }
 
+static bool is_numeric_field(const Json::Value &field)
+{
+    return field["sensor"] == "base.ascii_int" ||
+            field["sensor"] == "base.ascii_float";
+}
+
+static double convert_numeric(const string &value)
+{
+    istringstream is(value);
+    double val;
+    is >> val;
+    if (is.fail())
+        throw runtime_error("couldn't parse numeric value");
+    return val;
+}
+
 static void extract_fields(Json::Value &data, const Json::Value &fields,
                            const vector<string> &parts)
 {
@@ -298,12 +315,101 @@ static void extract_fields(Json::Value &data, const Json::Value &fields,
         {
             if (is_ddmmmm_field(*field))
                 data[key] = convert_ddmmmm(value);
+            else if (is_numeric_field(*field))
+                data[key] = convert_numeric(value);
             else
                 data[key] = value;
         }
 
         field++;
         part++;
+    }
+}
+
+static void numeric_scale(Json::Value &data, const Json::Value &config)
+{
+    const string source = config["source"].asString();
+    string destination = source;
+
+    if (!config["destination"].isNull())
+    {
+        if (!config["destination"].isString())
+            throw runtime_error("Invalid (numeric scale) configuration "
+                                "(non string destination)");
+        destination = config["destination"].asString();
+    }
+
+    if (destination == "payload" ||
+            (destination.size() && destination[0] == '_'))
+        throw runtime_error("Invalid (numeric scale) configuration "
+                            "(forbidden destination)");
+
+    if (!data[source].isNumeric())
+        throw runtime_error("Attempted to apply numeric scale to "
+                            "(non numeric source value)");
+    if (!config["factor"].isNumeric())
+        throw runtime_error("Invalid (numeric scale) configuration "
+                            "(non numeric factor)");
+    if (!config["source"].isString())
+        throw runtime_error("Invalid (numeric scale) configuration "
+                            "(non string source)");
+
+    double value = data[source].asDouble();
+    double factor = config["factor"].asDouble();
+
+    value *= factor;
+
+    if (!config["offset"].isNull())
+    {
+        if (!config["offset"].isNumeric())
+            throw runtime_error("Invalid (numeric scale) configuration "
+                                "(non numeric offset)");
+
+        double offset = config["offset"].asDouble();
+
+        value += offset;
+    }
+
+    if (!config["round"].isNull())
+    {
+        if (!config["round"].isNumeric())
+            throw runtime_error("Invalid (numeric scale) configuration "
+                                "(non numeric round)");
+
+        double round_d = config["round"].asDouble();
+        int round_i = int(round_d);
+
+        if (fabs(double(round_i) - round_d) > 0.001)
+            throw runtime_error("Invalid (numeric scale) configuration "
+                                "(non integral round)");
+
+        if (value != 0)
+        {
+            int position = round_i - int(ceil(log10(fabs(value))));
+            double m = pow(10, position);
+            value = round(value * m) / m;
+        }
+    }
+
+    data[destination] = value;
+}
+
+static void post_filters(Json::Value &data, const Json::Value &sentence)
+{
+    if (!sentence["filters"].isObject())
+        return;
+
+    const Json::Value post_filters = sentence["filters"]["post"];
+
+    if (!post_filters.isArray())
+        return;
+
+    for (Json::Value::const_iterator it = post_filters.begin();
+         it != post_filters.end(); it++)
+    {
+        if ((*it)["type"] == "normal" &&
+            (*it)["filter"] == "common.numeric_scale")
+            numeric_scale(data, *it);
     }
 }
 
@@ -337,6 +443,7 @@ static void attempt_settings(Json::Value &data, const Json::Value &sentence,
         throw runtime_error("Incorrect number of fields");
 
     extract_fields(data, fields, parts);
+    post_filters(data, sentence);
 }
 
 /* crude_parse is based on the parse() method of
@@ -376,7 +483,7 @@ Json::Value UKHASExtractor::crude_parse()
         /* Silence errors, and only log them if all attempts fail */
         vector<string> errors;
 
-        for (Json::Value::iterator it = sentences.begin();
+        for (Json::Value::const_iterator it = sentences.begin();
              it != sentences.end(); it++)
         {
             try
@@ -393,7 +500,7 @@ Json::Value UKHASExtractor::crude_parse()
 
         /* Couldn't parse using any of the settings... */
         mgr->status("UKHAS Extractor: full parse failed:");
-        for (vector<string>::iterator it = errors.begin();
+        for (vector<string>::const_iterator it = errors.begin();
              it != errors.end(); it++)
         {
             mgr->status("UKHAS Extractor: " + (*it));
