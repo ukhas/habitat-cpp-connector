@@ -386,7 +386,7 @@ static void numeric_scale(Json::Value &data, const Json::Value &config)
         if (value != 0)
         {
             int position = round_i - int(ceil(log10(fabs(value))));
-            double m = pow(10, position);
+            double m = pow(10.0, position);
             value = round(value * m) / m;
         }
     }
