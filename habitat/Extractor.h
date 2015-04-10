@@ -49,6 +49,7 @@ protected:
     friend void ExtractorManager::add(Extractor &e);
 
 public:
+    virtual ~Extractor() {};
     virtual void skipped(int n) = 0;
     virtual void push(char b, enum push_flags flags) = 0;
 };
