@@ -270,6 +270,8 @@ static string convert_ddmmmm(const string &value)
     if (right_val >= 60 || right_val < 0)
         throw runtime_error("invalid right part (ddmm)");
 
+    if (value.find('-') != string::npos)
+        right_val *= -1;
     double dd = left_val + (right_val / 60);
     
     ostringstream os;

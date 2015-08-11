@@ -363,6 +363,10 @@ class TestUKHASExtractor:
                  "format":"dd.dddd"},
                 {"sensor":"stdtelem.coordinate","name":"lat_b",
                  "format":"ddmm.mm"},
+		{"sensor":"stdtelem.coordinate","name":"lat_a_neg",
+		 "format":"ddmm.mm"},
+		{"sensor":"stdtelem.coordinate","name":"lat_b_neg",
+		 "format":"ddmm.mm"},
                 {"name": "field_b"}
             ],
         } ]
@@ -370,7 +374,7 @@ class TestUKHASExtractor:
 
     def test_ddmmmmmm(self):
         self.extr.set_current_payload(self.ddmmmmmm_flight_doc)
-        string = "$$TESTING,0024.124583,5116.5271,whatever*14BA\n"
+        string = "$$TESTING,0024.124583,5116.5271,-0016.5271,-5116.5271,whatever*F390\n"
         self.extr.push(string)
         self.extr.check_status("start delim")
         self.extr.check_upload(string)
@@ -378,6 +382,7 @@ class TestUKHASExtractor:
         self.extr.check_data({"_sentence": string, "_parsed": True,
                               "_protocol": "UKHAS", "payload": "TESTING",
                               "lat_a": "0024.124583", "lat_b": "51.27545",
+                              "lat_a_neg": "-0.27545", "lat_b_neg": "-51.27545",
                               "field_b": "whatever" })
 
     numeric_scale_flight_doc = {
