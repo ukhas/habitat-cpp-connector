@@ -11,13 +11,21 @@
 #include <stdexcept>
 #include <iomanip>
 
+/* Daniel Richman 2012-08-24 02:21:14: */
 /* on mingw32, localtime_r and gmtime_r don't exist. Instead, pthreadsw32's
  * pthread.h provides macros that map calls from localtime_r to localtime(),
  * (and the same for gmtime), noting that "[the] WIN32 C runtime library has
  * been made thread-safe without affecting the user interface."
  *
  * tl;dr: need to include pthread.h to get localtime_r on mingw32 */
-#include <pthread.h>
+// #include <pthread.h>
+/* Richard Meadows 2016-08-02 11:31:39: */
+/* since Daniel's comment, the situation has changed. These
+ * definitions are gone in pthreadsw32 2.9.1, and instead upstream
+ * fldigi have rolled their own. These are in timeops.h, so include
+ * that instead */
+#include "timeops.h"
+
 
 using namespace std;
 
